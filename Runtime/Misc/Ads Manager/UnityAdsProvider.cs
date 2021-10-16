@@ -17,7 +17,7 @@ namespace Lost
     //// TODO [bgish]: Possible add warnings/errors if they want to use Unity Ads but don't specify a proper Store Id
     //// TODO [bgish]: Investigate the removal of the USING_UNITY_ADS define
 
-#if USING_UNITY_ADS
+#if USING_UNITY_ADS && (UNITY_IOS || UNITY_ANDROID)
     public class UnityAdsProvider : MonoBehaviour, IAdProvider, IUnityAdsListener
 #else
     public class UnityAdsProvider : MonoBehaviour, IAdProvider
