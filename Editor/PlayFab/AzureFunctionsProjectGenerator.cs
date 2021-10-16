@@ -50,7 +50,7 @@ namespace Lost
 
             if (EditorBuildSettings.TryGetConfigObject(AzureFunctionsEditorBuildSettingsId, out AzureFunctionsProjectGenerator azureFunctionsGenerator) == false || !azureFunctionsGenerator)
             {
-                azureFunctionsGenerator = LostLibrary.CreateScriptableObject<AzureFunctionsProjectGenerator>("264a336d161a54948b392550765de177", "AzureFunctionsGenerator.asset");
+                azureFunctionsGenerator = LostCore.CreateScriptableObject<AzureFunctionsProjectGenerator>("264a336d161a54948b392550765de177", "AzureFunctionsGenerator.asset");
                 EditorBuildSettings.AddConfigObject(AzureFunctionsEditorBuildSettingsId, azureFunctionsGenerator, true);
             }
 
