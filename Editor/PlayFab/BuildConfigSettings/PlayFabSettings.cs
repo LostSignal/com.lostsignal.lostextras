@@ -82,6 +82,7 @@ namespace Lost.PlayFab
             //// TODO [bgish]: If Platform.IsUnityCloudBuild, check if Upload was successful and fail the build if it wasn't
         }
 
+        [EditorEvents.OnEnterPlayMode]
         [EditorEvents.OnDomainReload]
         private static void OnDomainReload()
         {

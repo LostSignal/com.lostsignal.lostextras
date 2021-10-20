@@ -35,6 +35,11 @@ namespace Lost
 
         public async Task<bool> AllowPlayerToJoin(UserInfo userInfo)
         {
+            if (userInfo == null)
+            {
+                return false;
+            }
+
             var sessionTicket = userInfo.GetSessionTicket();
 
             if (string.IsNullOrEmpty(sessionTicket))
@@ -74,8 +79,8 @@ namespace Lost
 
             if (authenticate.Error == null && authenticate.Result != null)
             {
-                userInfo.SetPlayFabId(authenticate.Result.UserInfo.PlayFabId);
-                userInfo.SetDisplayName(authenticate.Result.UserInfo.TitleInfo.DisplayName);
+                userInfo.UserHexId = authenticate.Result.UserInfo.PlayFabId;
+                userInfo.DisplayName = authenticate.Result.UserInfo.TitleInfo.DisplayName;
 
                 return true;
             }

@@ -4,6 +4,8 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+#if UNITY
+
 #if USING_UNITY_PURCHASING && !UNITY_XBOXONE && !UNITY_LUMIN
 #define PURCHASING_ENABLED
 #endif
@@ -14,10 +16,10 @@ namespace Lost
     using System.Collections.Generic;
     using System.Linq;
 
-    #if USING_PLAYFAB
+#if USING_PLAYFAB
     using global::PlayFab.ClientModels;
     using Lost.PlayFab;
-    #endif
+#endif
 
     using TMPro;
     using UnityEngine;
@@ -31,7 +33,7 @@ namespace Lost
 
     public class PurchaseItem : DialogLogic
     {
-        #pragma warning disable 0649
+#pragma warning disable 0649
         [Header("Purchase Item")]
         [SerializeField] private Button cancelButton;
 
@@ -51,9 +53,9 @@ namespace Lost
 
         [Header("Virtual Currencies")]
         [SerializeField] private VirtualCurrencyIcon[] virtualCurrencyIcons;
-        #pragma warning restore 0649
+#pragma warning restore 0649
 
-        #if USING_PLAYFAB
+#if USING_PLAYFAB
 
         private string storeId;
         private StoreItem storeItem;
@@ -107,11 +109,11 @@ namespace Lost
 
                 if (isIapItem)
                 {
-                    #if PURCHASING_ENABLED
+#if PURCHASING_ENABLED
 
                     this.iapBuyButtonText.text = IAP.UnityPurchasingManager.Instance.GetLocalizedPrice(storeItem.ItemId);
 
-                    #else
+#else
 
                     uint dollars = virtualCurrencyCost / 100;
                     uint cents = virtualCurrencyCost % 100;
@@ -124,7 +126,7 @@ namespace Lost
                         .Append(cents)
                         .Set(this.iapBuyButtonText);
 
-                    #endif
+#endif
                 }
                 else
                 {
@@ -229,16 +231,16 @@ namespace Lost
             return this.virtualCurrencyIcons.First(x => x.Id == virtualCurrencyId).Icon;
         }
 
-        #endif
+#endif
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2235:Mark all non-serializable fields", Justification = "Using Unity Serialization")]
         [Serializable]
         private class VirtualCurrencyIcon
         {
-            #pragma warning disable 0649
+#pragma warning disable 0649
             [SerializeField] private string id;
             [SerializeField] private Sprite icon;
-            #pragma warning restore 0649
+#pragma warning restore 0649
 
             public string Id
             {
@@ -252,3 +254,5 @@ namespace Lost
         }
     }
 }
+
+#endif
