@@ -58,16 +58,23 @@ namespace Lost.CloudFunctions
 
             if (titleEntityTokenCache.IsNullOrWhitespace())
             {
-                var getEntityToken = await global::PlayFab.PlayFabAuthenticationAPI.GetEntityTokenAsync(new global::PlayFab.AuthenticationModels.GetEntityTokenRequest
+                try
                 {
-                    Entity = new global::PlayFab.AuthenticationModels.EntityKey
+                    var getEntityToken = await global::PlayFab.PlayFabAuthenticationAPI.GetEntityTokenAsync(new global::PlayFab.AuthenticationModels.GetEntityTokenRequest
                     {
-                        Id = global::PlayFab.PlayFabSettings.staticSettings.TitleId,
-                        Type = "title",
-                    },
-                });
+                        Entity = new global::PlayFab.AuthenticationModels.EntityKey
+                        {
+                            Id = global::PlayFab.PlayFabSettings.staticSettings.TitleId,
+                            Type = "title",
+                        },
+                    });
 
-                titleEntityTokenCache = getEntityToken.Result.EntityToken;
+                    titleEntityTokenCache = getEntityToken.Result.EntityToken;
+                }
+                catch (Exception ex)
+                {
+                    UnityEngine.Debug.LogException(ex);
+                }
             }
 
             return titleEntityTokenCache;
@@ -159,18 +166,25 @@ namespace Lost.CloudFunctions
             return $"http://localhost:7071/api/{functionName}";
         }
 
-        private async Task<Result> ExecuteLocalhostCloudFuntion(string functionName, object functionParameter)
+        private async Task<Result> ExecuteLocalhostCloudFuntion(string functionName, object functionParameter, bool usesTitleEntityToken = false)
         {
 #if UNITY_EDITOR
-            if (PlayFabSecretKeyCheck() == false)
+            string titleEntityToken = null;
+
+            if (usesTitleEntityToken)
             {
-                return null;
+                if (PlayFabSecretKeyCheck() == false)
+                {
+                    return null;
+                }
+                
+                titleEntityToken = await GetTitleEntityToken();
             }
 
             var functionExecution = new FunctionExecutionContext(
                 JsonUtil.Serialize(functionParameter),
                 PlayFabManager.Instance.User.PlayFabId,
-                await GetTitleEntityToken());
+                titleEntityToken);
 
             try
             {
