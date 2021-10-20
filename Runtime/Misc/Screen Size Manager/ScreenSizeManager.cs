@@ -8,25 +8,25 @@
 
 namespace Lost
 {
-    using System;
     using System.Collections;
     using UnityEngine;
 
     public sealed class ScreenSizeManager : Manager<ScreenSizeManager>
     {
+        #pragma warning disable 0649
+        [SerializeField] private bool limitMobileScreenSize;
+        [SerializeField] private int maxScreenSize = 1920;
+        #pragma warning restore 0649
+
         public override void Initialize()
         {
             this.StartCoroutine(Coroutine());
 
             IEnumerator Coroutine()
             {
-                yield return ReleasesManager.WaitForInitialization();
-
-                var settings = ReleasesManager.Instance.CurrentRelease.ScreenSizeManagerSettings;
-
-                if (settings.LimitMobileScreenSize)
+                if (this.limitMobileScreenSize)
                 {
-                    yield return this.LimitScreenSize(settings.MaxScreenSize);
+                    yield return this.LimitScreenSize(this.maxScreenSize);
                 }
 
                 this.SetInstance(this);
@@ -35,14 +35,17 @@ namespace Lost
 
         private IEnumerator LimitScreenSize(int maxScreenSize)
         {
+            // Wait a tick for all managers to be registered
+            yield return null;
+
             bool isMobilePlatform = Application.platform == RuntimePlatform.Android || Application.platform == RuntimePlatform.IPhonePlayer;
             bool isMobileVrDevice = false;
 
             // Detecting if this is a mobile vr device
-            if (ReleasesManager.Instance.CurrentRelease.IsXRApp)
+            if (Application.isEditor == false && this.limitMobileScreenSize && isMobilePlatform && this.DoesXRManagerExist())
             {
                 yield return XRManager.WaitForInitialization();
-                isMobilePlatform = XRManager.Instance.CurrentDevice.XRType == XRType.VRHeadset;
+                isMobileVrDevice = XRManager.Instance.CurrentDevice.XRType == XRType.VRHeadset;
             }
 
             if (isMobilePlatform && isMobileVrDevice == false)
@@ -70,25 +73,17 @@ namespace Lost
             }
         }
 
-        [Serializable]
-        public class Settings
+        private bool DoesXRManagerExist()
         {
-#pragma warning disable 0649
-            [SerializeField] private bool limitMobileScreenSize;
-            [SerializeField] private int maxScreenSize = 1920;
-#pragma warning restore 0649
-
-            public bool LimitMobileScreenSize
+            for (int i = 0; i < ManagersReady.Managers.Count; i++)
             {
-                get => this.limitMobileScreenSize;
-                set => this.limitMobileScreenSize = value;
+                if (ManagersReady.Managers[i] is XRManager)
+                {
+                    return true;
+                }
             }
 
-            public int MaxScreenSize
-            {
-                get => this.maxScreenSize;
-                set => this.maxScreenSize = value;
-            }
+            return false;
         }
     }
 }

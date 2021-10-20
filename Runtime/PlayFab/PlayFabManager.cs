@@ -25,6 +25,7 @@ namespace Lost.PlayFab
 
 #pragma warning disable 0649
         [SerializeField] private LoginMethod loginMethod;
+        [SerializeField] private Settings settings;
 #pragma warning restore 0649
 
         private bool regainFocusCoroutineRunning;
@@ -89,12 +90,9 @@ namespace Lost.PlayFab
             {
                 PlayFabSettings.GlobalErrorHandler += this.OnGlobalErrorEvent;
 
-                yield return ReleasesManager.WaitForInitialization();
                 yield return UnityPurchasingManager.WaitForInitialization();
 
-                PlayFabManager.Settings playfabSettings = ReleasesManager.Instance.CurrentRelease.PlayfabManagerSettings;
-
-                string catalogVersion = playfabSettings.CatalogVersion;
+                string catalogVersion = this.settings.CatalogVersion;
                 PlayFabSettings.staticSettings.TitleId = Lost.BuildConfig.RuntimeBuildConfig.Instance.GetString(PlayFabConfigExtensions.TitleId);
 
                 this.Login = new LoginManager(this);
@@ -102,17 +100,17 @@ namespace Lost.PlayFab
                 // Starting the Logging In loop
                 var combinedParams = new GetPlayerCombinedInfoRequestParams
                 {
-                    GetTitleData = playfabSettings.LoadTitleDataKeys.Count > 0,
-                    TitleDataKeys = playfabSettings.LoadTitleDataKeys,
-                    GetUserInventory = playfabSettings.LoadInventory,
-                    GetUserVirtualCurrency = playfabSettings.LoadVirtualCurrency,
-                    GetPlayerProfile = playfabSettings.LoadPlayerProfile,
-                    GetCharacterList = playfabSettings.LoadCharacters,
+                    GetTitleData = this.settings.LoadTitleDataKeys.Count > 0,
+                    TitleDataKeys = this.settings.LoadTitleDataKeys,
+                    GetUserInventory = this.settings.LoadInventory,
+                    GetUserVirtualCurrency = this.settings.LoadVirtualCurrency,
+                    GetPlayerProfile = this.settings.LoadPlayerProfile,
+                    GetCharacterList = this.settings.LoadCharacters,
                     GetUserAccountInfo = true,
                 };
 
                 LostMessages.BootloaderLoggingIn();
-                var login = this.Login.Login(this.loginMethod, combinedParams, playfabSettings.FacebookPermissions);
+                var login = this.Login.Login(this.loginMethod, combinedParams, this.settings.FacebookPermissions);
 
                 yield return login;
 
@@ -129,18 +127,18 @@ namespace Lost.PlayFab
                 this.VirtualCurrency = new VirtualCurrencyManager(this, login.Value?.InfoResultPayload?.UserVirtualCurrency);
 
                 // Catalog
-                if (playfabSettings.LoadCatalog)
+                if (this.settings.LoadCatalog)
                 {
                     LostMessages.BootloaderDownloadingCatalog();
                     yield return this.Catalog.GetCatalog();
                 }
 
                 // Stores
-                if (playfabSettings.LoadStoresAtStartup?.Count > 0)
+                if (this.settings.LoadStoresAtStartup?.Count > 0)
                 {
                     LostMessages.BootloaderLoadingStores();
 
-                    foreach (var store in playfabSettings.LoadStoresAtStartup)
+                    foreach (var store in this.settings.LoadStoresAtStartup)
                     {
                         // TODO [bgish]: Tell the loading dialog that we're getting store "X"
                         yield return this.Store.GetStore(store);
@@ -148,14 +146,14 @@ namespace Lost.PlayFab
                 }
 
                 // Initializing purchasing, but no need to wait on it later
-                if (playfabSettings.LoadPurchasing)
+                if (this.settings.LoadPurchasing)
                 {
                     LostMessages.BootloaderInitializingPurchasing();
                     yield return this.Purchasing.Initialize();
                 }
 
                 // Push Notifications
-                if (Application.platform == RuntimePlatform.IPhonePlayer && playfabSettings.RegisterIosPushNotificationsAtStartup)
+                if (Application.platform == RuntimePlatform.IPhonePlayer && this.settings.RegisterIosPushNotificationsAtStartup)
                 {
                     this.PushNotifications.RegisterPushNotificationsWithPlayFab();
                 }
@@ -166,6 +164,11 @@ namespace Lost.PlayFab
 
                 this.SetInstance(this);
             }
+        }
+
+        public UnityTask<string> GetRealtimeMessagesUrl()
+        {
+            throw new NotImplementedException();
         }
 
         public UnityTask<ExecuteCloudScriptResult> Do(ExecuteCloudScriptRequest request)

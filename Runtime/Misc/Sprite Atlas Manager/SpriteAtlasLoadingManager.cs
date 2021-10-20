@@ -16,9 +16,12 @@ namespace Lost
 
     public sealed class SpriteAtlasLoadingManager : Manager<SpriteAtlasLoadingManager>
     {
+        #pragma warning disable 0649
+        [SerializeField] private List<Atlas> atlases = new List<Atlas>();
+        #pragma warning restore 0649
+
         private readonly Dictionary<string, Action<SpriteAtlas>> unknownAtlasRequests = new Dictionary<string, Action<SpriteAtlas>>();
         private Dictionary<string, Atlas> atlasesMap = null;
-        private Settings settings;
 
         public override void Initialize()
         {
@@ -26,10 +29,7 @@ namespace Lost
 
             IEnumerator InitializeCoroutine()
             {
-                yield return ReleasesManager.WaitForInitialization();
                 yield return AddressablesManager.WaitForInitialization();
-
-                this.settings = ReleasesManager.Instance.CurrentRelease.SpriteAtlasLoadingManagerSettings;
 
                 this.SetInstance(this);
             }
@@ -98,7 +98,7 @@ namespace Lost
             {
                 this.atlasesMap = new Dictionary<string, Atlas>();
 
-                foreach (var atlas in this.settings.Atlases)
+                foreach (var atlas in this.atlases)
                 {
                     this.atlasesMap.Add(atlas.Tag, atlas);
                 }
@@ -163,21 +163,6 @@ namespace Lost
             {
                 get { return this.tag; }
                 set { this.tag = value; }
-            }
-        }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2235:Mark all non-serializable fields", Justification = "Using Unity Serialization")]
-        [Serializable]
-        public class Settings
-        {
-#pragma warning disable 0649
-            [SerializeField] private List<Atlas> atlases = new List<Atlas>();
-#pragma warning restore 0649
-
-            public List<Atlas> Atlases
-            {
-                get => this.atlases;
-                set => this.atlases = value;
             }
         }
     }

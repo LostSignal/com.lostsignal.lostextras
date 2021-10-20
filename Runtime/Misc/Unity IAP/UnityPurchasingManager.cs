@@ -12,7 +12,6 @@
 
 namespace Lost.IAP
 {
-    using System.Collections;
     using System.Collections.Generic;
     using UnityEngine;
 
@@ -27,7 +26,6 @@ namespace Lost.IAP
 #endif
     {
 #if PURCHASING_ENABLED
-
         // initialization
         private IStoreController controller;
         private ConfigurationBuilder builder;
@@ -60,26 +58,22 @@ namespace Lost.IAP
         }
 #endif
 
+#if !USING_UNITY_PURCHASING && UNITY_EDITOR
+
+        [ShowEditorInfo]
+        public string GetInfoMessage() => "Unity IAP Package is not present.  Unity Purchasing Manager will be ignored.";
+
+        [ExposeInEditor("Add Unity IAP Package")]
+        public void AddUnityIAPPackage()
+        {
+            PackageManagerUtil.Add("com.unity.purchasing");
+        }
+
+#endif
+
         public override void Initialize()
         {
-            this.StartCoroutine(Coroutine());
-
-            IEnumerator Coroutine()
-            {
-                yield return ReleasesManager.WaitForInitialization();
-
-                var settings = ReleasesManager.Instance.CurrentRelease.UnityPurchasingManagerSettings;
-
-                if (settings.IsEnabled)
-                {
-#if !PURCHASING_ENABLED
-                    Debug.LogError("UnityPurchasingManager: Tring to use UnityPurchasingManager without USING_UNITY_PURCHASING define. " +
-                        "Make sure Unity Purchasing is installed correctly.");
-#endif
-                }
-
-                this.SetInstance(this);
-            }
+            this.SetInstance(this);
         }
 
 #if PURCHASING_ENABLED
@@ -222,20 +216,6 @@ namespace Lost.IAP
         }
 
 #endif
-
-        [System.Serializable]
-        public class Settings
-        {
-#pragma warning disable 0649
-            [SerializeField] private bool isEnabled;
-#pragma warning restore 0649
-
-            public bool IsEnabled
-            {
-                get => this.isEnabled;
-                set => this.isEnabled = value;
-            }
-        }
     }
 }
 

@@ -21,12 +21,13 @@ namespace Lost
     {
         #pragma warning disable 0649
         [SerializeField] private StorageLocation storageLocation;
+        [SerializeField] private Release hardCodedRelease;
         #pragma warning restore 0649
 
         public enum StorageLocation
         {
-            Resources,
-            PlayFab,
+            HardCoded,
+            Url,
         }
 
         public Release CurrentRelease { get; private set; }
@@ -37,11 +38,11 @@ namespace Lost
 
             IEnumerator InitializeCoroutine()
             {
-                if (this.storageLocation == StorageLocation.Resources)
+                if (this.storageLocation == StorageLocation.HardCoded)
                 {
-                    this.CurrentRelease = ReleaseLocator.GetCurrentReleaseFromResources();
+                    this.CurrentRelease = this.hardCodedRelease;
                 }
-                else if (this.storageLocation == StorageLocation.PlayFab)
+                else if (this.storageLocation == StorageLocation.Url)
                 {
                     throw new NotImplementedException();
                 }
