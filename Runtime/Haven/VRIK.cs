@@ -17,7 +17,7 @@ namespace Lost
     using UnityEngine;
     using UnityEngine.Animations.Rigging;
 
-    public class VRIK : MonoBehaviour
+    public class VRIK : MonoBehaviour, IOnManagersReady
     {
 #pragma warning disable 0649
         [SerializeField] private Transform root;
@@ -150,21 +150,21 @@ namespace Lost
             }
         }
 
+        public void OnManagersReady()
+        {
+            if (XRManager.Instance.CurrentDevice.XRType == XRType.VRHeadset)
+            {
+                this.rig = HavenRig.GetRig();
+                this.enabled = true;
+            }
+        }
+
         private void Start()
         {
             this.headBodyOffset = this.transform.position - this.headConstraint.position;
             this.enabled = false;
 
-            Bootloader.OnManagersReady += Initialize;
-
-            void Initialize()
-            {
-                if (XRManager.Instance.CurrentDevice.XRType == XRType.VRHeadset)
-                {
-                    this.rig = HavenRig.GetRig();
-                    this.enabled = true;
-                }
-            }
+            ManagersReady.Register(this);
         }
 
         private void FixedUpdate()

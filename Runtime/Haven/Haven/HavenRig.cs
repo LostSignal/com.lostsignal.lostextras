@@ -31,7 +31,7 @@ namespace Lost.Haven
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1810:Initialize reference type static fields inline", Justification = "Must register for events.")]
         static HavenRig()
         {
-            Bootloader.OnReset += Reset;
+            Platform.OnReset += Reset;
 
             static void Reset()
             {

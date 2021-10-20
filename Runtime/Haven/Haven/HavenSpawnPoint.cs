@@ -12,14 +12,11 @@ namespace Lost.Haven
     using UnityEngine;
 
     [AddComponentMenu("Haven XR/HXR Spawn Point")]
-    public class HavenSpawnPoint : MonoBehaviour
+    public class HavenSpawnPoint : MonoBehaviour, IOnManagersReady
     {
-        private void Awake()
-        {
-            Bootloader.OnManagersReady += this.Initialize;
-        }
+        private void Awake() => ManagersReady.Register(this);
 
-        private void Initialize()
+        public void OnManagersReady()
         {
             CoroutineRunner.Instance.StartCoroutine(Coroutine());
 
