@@ -8,6 +8,7 @@
 
 namespace Lost
 {
+    using System;
     using System.Collections.Generic;
     using Lost.BuildConfig;
     using UnityEditor;
