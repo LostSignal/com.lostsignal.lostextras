@@ -19,7 +19,7 @@ namespace Lost
 
     public class VRIK : MonoBehaviour, IOnManagersReady
     {
-#pragma warning disable 0649
+        #pragma warning disable 0649
         [SerializeField] private Transform root;
         [SerializeField] private Transform headConstraint;
         [SerializeField] private float turnSmoothness = 5.0f;
@@ -32,7 +32,7 @@ namespace Lost
 
         [SerializeField] private VRMap leftHand = new VRMap { TrackingRotationOffset = new Vector3(-90.0f, 90.0f, 0.0f) };
         [SerializeField] private VRMap rightHand = new VRMap { TrackingRotationOffset = new Vector3(90.0f, -90.0f, 0.0f) };
-#pragma warning restore 0649
+        #pragma warning restore 0649
 
         private Vector3 headBodyOffset;
         private HavenRig rig;

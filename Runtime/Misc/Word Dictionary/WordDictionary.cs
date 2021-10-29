@@ -21,6 +21,9 @@ namespace Lost
         private readonly int[] wordCharacterCounts = new int[LetterCount];
 
 #pragma warning disable 0649
+        [SerializeField]
+        private string source;
+
         [HideInInspector]
         [SerializeField]
         private string[] words;

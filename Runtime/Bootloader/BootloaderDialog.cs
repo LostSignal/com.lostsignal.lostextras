@@ -8,12 +8,11 @@
 
 namespace Lost
 {
-    using System.Collections;
     using TMPro;
     using UnityEngine;
     using UnityEngine.UI;
 
-    public class BootloaderDialog : MonoBehaviour
+    public class BootloaderDialog : DialogLogic
     {
         #pragma warning disable 0649
         [SerializeField] private AspectRatioFitter aspectRatioFitter;
@@ -21,45 +20,12 @@ namespace Lost
         [SerializeField] private Image progressBar;
         #pragma warning disable 0649
 
-        private Coroutine showCoroutine;
-
-        public bool IsShown { get; private set; }
-
-        public void Show()
+        protected override void Awake()
         {
-            this.StopShow();
-            this.showCoroutine = this.StartCoroutine(Coroutine());
+            base.Awake();
 
-            IEnumerator Coroutine()
-            {
-                this.IsShown = true;
-                Bootloader.ProgressTextUpdate += this.OnProgressTextUpdate;
-                Bootloader.ProgressUpdated += this.OnProgressUpdated;
-
-                yield return WaitForUtil.Seconds(0.5f);
-
-                this.DisableAspectRatioFitter();
-
-                
-            }
-        }
-
-        public void Hide()
-        {
-            this.StopShow();
-
-            this.IsShown = false;
-            Bootloader.ProgressTextUpdate -= this.OnProgressTextUpdate;
-            Bootloader.ProgressUpdated -= this.OnProgressUpdated;
-        }
-
-        private void StopShow()
-        {
-            if (this.showCoroutine != null)
-            {
-                this.StopCoroutine(this.showCoroutine);
-                this.showCoroutine = null;
-            }
+            Bootloader.ProgressTextUpdate += this.OnProgressTextUpdate;
+            Bootloader.ProgressUpdated += this.OnProgressUpdated;
         }
 
         private void OnProgressTextUpdate(string newText)
@@ -78,13 +44,48 @@ namespace Lost
             }
         }
 
-        private void DisableAspectRatioFitter()
-        {
-            if (this.aspectRatioFitter != null && Application.isEditor == false)
-            {
-                this.aspectRatioFitter.enabled = false;
-            }
-        }
+        //// public void Show()
+        //// {
+        ////     this.StopShow();
+        ////     this.showCoroutine = this.StartCoroutine(Coroutine());
+        //// 
+        ////     IEnumerator Coroutine()
+        ////     {
+        ////         this.IsShown = true;
+        //// 
+        ////         yield return WaitForUtil.Seconds(0.5f);
+        //// 
+        ////         this.DisableAspectRatioFitter();
+        //// 
+        ////         
+        ////     }
+        //// }
+        //// 
+        //// public void Hide()
+        //// {
+        ////     this.StopShow();
+        //// 
+        ////     this.IsShown = false;
+        ////     Bootloader.ProgressTextUpdate -= this.OnProgressTextUpdate;
+        ////     Bootloader.ProgressUpdated -= this.OnProgressUpdated;
+        //// }
+        //// 
+        //// private void StopShow()
+        //// {
+        ////     if (this.showCoroutine != null)
+        ////     {
+        ////         this.StopCoroutine(this.showCoroutine);
+        ////         this.showCoroutine = null;
+        ////     }
+        //// }
+        //// 
+        //// private void DisableAspectRatioFitter()
+        //// {
+        ////     if (this.aspectRatioFitter != null && Application.isEditor == false)
+        ////     {
+        ////         this.aspectRatioFitter.enabled = false;
+        ////     }
+        //// }
     }
 }
 

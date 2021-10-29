@@ -20,38 +20,123 @@ namespace Lost
     public delegate void BootloaderProgressUpdatedDelegate(float progress);
 
     public delegate void BootloaderProgressTextUpdatedDelegate(string text);
-
-    public enum BootloaderLocation
+    
+    public enum BootloaderConfigLocation
     {
-        ResourcesPath,
-        SceneName,
+        RuntimeConfigSettings,
+        Releases,
     }
 
-    public enum ManagersLocation
+    public enum AssetType
     {
-        ResourcesPath,
         SceneName,
-        //// AddressablesPrefab,
-        //// AddressablesScene,
+        SceneAddressable,
+        PrefabResources,
+        PrefabAddressable,
+    }
+
+    [Serializable]
+    public class RequiredScene
+    {
+        [SerializeField] private string sceneName;
+        
+        [Tooltip("This is optional, if this set, then the scene will be loaded with Addressables.")]
+        [SerializeField] private string sceneAddressablesPath;
+
+        public string SceneName
+        {
+            get => this.sceneName;
+            set => this.sceneName = value;
+        }
+
+        public string SceneAddressablesPath
+        {
+            get => this.sceneAddressablesPath;
+            set => this.sceneAddressablesPath = value;
+        }
+
+        public void Load()
+        {
+            if (IsSceneLoaded(this.sceneName) == false)
+            {
+                if (string.IsNullOrWhiteSpace(this.SceneAddressablesPath))
+                {
+                    throw new NotImplementedException();
+                }
+                else
+                {
+                    SceneManager.LoadScene(this.sceneName, LoadSceneMode.Additive);
+                }
+            }
+        }
+
+        public void Unload()
+        {
+            // if (bootloaderInstance != null)
+            // {
+            //     if (Application.isPlaying)
+            //     {
+            //         GameObject.Destroy(bootloaderInstance.gameObject);
+            //     }
+            //     else
+            //     {
+            //         GameObject.DestroyImmediate(bootloaderInstance.gameObject);
+            //     }
+            // }
+            // 
+            // if (managersInstance != null)
+            // {
+            //     if (Application.isPlaying)
+            //     {
+            //         GameObject.Destroy(managersInstance);
+            //     }
+            //     else
+            //     {
+            //         GameObject.DestroyImmediate(managersInstance);
+            //     }
+            // }
+        }
+
+        private static GameObject InstantiateResource(string path)
+        {
+            var instance = GameObject.Instantiate(Resources.Load<GameObject>(path));
+            instance.name = instance.name.Replace("(Clone)", string.Empty);
+            SceneManager.MoveGameObjectToScene(instance, SceneManager.GetSceneByName(Bootloader.BootloaderSceneName));
+            return instance;
+        }
+
+        private static bool IsSceneLoaded(string sceneName)
+        {
+            bool sceneAlreadyLoaded = false;
+
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                sceneAlreadyLoaded |= SceneManager.GetSceneAt(i).name == sceneName;
+            }
+
+            return sceneAlreadyLoaded;
+        }
+    }
+
+    [Serializable]
+    public class BootloaderConfig
+    {
+        [SerializeField] private List<RequiredScene> requiredScenes;
+
+        public List<RequiredScene> RequiredScenes
+        {
+            get => this.requiredScenes;
+            set => this.requiredScenes = value;
+        }
     }
 
     public class Bootloader : MonoBehaviour
     {
         // RuntimeConfig Settings Keys
-        public const string BootloaderLocation = "Bootloader.Location";
-        public const string BootloaderPath = "Bootloader.Path";
-        public const string BootloaderManagersLocation = "Bootloader.ManagersLocation";
-        public const string BootloaderManagersPath = "Bootloader.ManagersPath";
-        public const string BootloaderRebootSceneName = "Bootloader.RebootSceneName";
+        public const string BootloaderSceneName = "Bootloader";
+        public const string BootloaderConfigLocation = "Bootloader.ConfigLocation";
+        public const string BootloaderConfig = "Bootloader.Config";
         public const string BootloaderIgnoreSceneNames = "Bootloader.IgnoreSceneNames";
-
-        // Default Values
-        public const string LostBootloaderResourcePath = "Lost/Bootloader";
-        public const string LostManagersResourcePath = "Lost/Managers";
-        public const string DefaultRebootSceneName = "Main";
-
-        private static Bootloader bootloaderInstance;
-        private static GameObject managersInstance;
 
 #pragma warning disable 0649
         [Header("Loading UI")]
@@ -61,9 +146,17 @@ namespace Lost
         [SerializeField] private Camera loadingCamera;
 #pragma warning restore 0649
 
+        private BootloaderConfig bootloaderConfig;
+
         public static event BootloaderProgressUpdatedDelegate ProgressUpdated;
 
         public static event BootloaderProgressTextUpdatedDelegate ProgressTextUpdate;
+
+        //// TODO [bgish]: Bring back the Bootloader Resource Path, it should always be just a prefab in resources
+        //// TODO [bgish]: Rename Asset to Initial Scenes, they take a SceneName and SceneGUID
+
+        //// TODO [bgish]: Move the Reset/Reboot event back into here
+        //// TODO [bgish]: Make the Bootloader.Finsihed event so the UI can react to it
 
         private bool ShowLoadingInEditor => Application.isEditor == false || this.dontShowLoadingInEditor == false;
 
@@ -74,80 +167,61 @@ namespace Lost
 
         public static void Reboot()
         {
-            string rebootSceneName = RuntimeBuildConfig.Instance.GetString(Bootloader.BootloaderRebootSceneName);
+            // this.loadingCamera.gameObject.SetActive(true);
+            // DialogManager.ForceUpdateDialogCameras(this.loadingCamera);
+            // Show Bootloader Dialog
+            // Update text to say Shutting Down
 
-            SceneManager.LoadScene(rebootSceneName, LoadSceneMode.Single);
+            var reboot = new GameObject("Reboot", typeof(EmptyBehaviour));
+            var empty = reboot.GetComponent<EmptyBehaviour>();
+            GameObject.DontDestroyOnLoad(reboot);
+            empty.StartCoroutine(Coroutine(reboot));
 
-            // Destory old bootloader instance
-            ResetBootloader();
-            BootBootloader();
+            //// TODO [bgish]: May need to create a Reboot prefab that is instantiated with a Camera that renders nothing but black, since 
+            ////               Unloading all scene will remove all cameras which can cause unusual behaviour.
 
-            Platform.Reset();
+            static IEnumerator Coroutine(GameObject rebootGameObject)
+            {
+                while (SceneManager.sceneCount > 0)
+                {
+                    yield return SceneManager.UnloadSceneAsync(SceneManager.GetSceneAt(0));
+                }
+
+                // TODO [bgish]: Once Bootloader has moved back into Core, move this back into Bootloader
+                Platform.Reset();
+
+                GameObject.Destroy(rebootGameObject);
+
+                BootBootloader();
+            }
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void BootBootloader()
         {
-            string bootloaderLocation = RuntimeBuildConfig.Instance.GetString(BootloaderLocation);
-            string bootloaderPath = RuntimeBuildConfig.Instance.GetString(BootloaderPath);
+            string bootloaderConfigLocation = RuntimeBuildConfig.Instance.GetString(BootloaderConfigLocation);
 
-            string managersLocation = RuntimeBuildConfig.Instance.GetString(BootloaderManagersLocation);
-            string managersPath = RuntimeBuildConfig.Instance.GetString(BootloaderManagersPath);
-
-            string rebootSceneName = RuntimeBuildConfig.Instance.GetString(BootloaderRebootSceneName);
-
-            if (string.IsNullOrWhiteSpace(bootloaderLocation) ||
-                string.IsNullOrWhiteSpace(bootloaderPath) ||
-                string.IsNullOrWhiteSpace(managersLocation) ||
-                string.IsNullOrWhiteSpace(managersPath) ||
-                string.IsNullOrWhiteSpace(rebootSceneName))
-            {
-                Debug.LogError("Failed To Boot - Bootloader and/or Manager info is Empty! Do you have an active build config with the Bootloader Settings added?");
-                return;
-            }
-
-            if (ShouldRunBootloader() == false)
+            if (string.IsNullOrWhiteSpace(bootloaderConfigLocation) || ShouldRunBootloader() == false)
             {
                 return;
             }
 
             // Parsing the bootloader location
-            if (int.TryParse(bootloaderLocation, out int bootloaderLocationIntValue) == false)
+            if (int.TryParse(bootloaderConfigLocation, out int bootloaderLocationIntValue) == false)
             {
-                Debug.LogError($"Unable to startup Bootloader.  BootloaderLocation was not a valid int \"{bootloaderLocation}\"");
+                Debug.LogError($"Unable to startup Bootloader.  BootloaderConfigLocation was not a valid int \"{bootloaderConfigLocation}\"");
                 return;
             }
 
-            switch ((BootloaderLocation)bootloaderLocationIntValue)
+            if (bootloaderLocationIntValue != 0 && bootloaderLocationIntValue != 1)
             {
-                case Lost.BootloaderLocation.ResourcesPath:
-                {
-                    var bootloaderInstance = InstantiateResource(bootloaderPath);
+                Debug.LogError($"Unable to startup Bootloader.  BootloaderConfigLocation was not a valid value \"{bootloaderLocationIntValue}\"");
+                return;
+            }
 
-                    if (bootloaderInstance == null)
-                    {
-                        Debug.LogError($"Failed To Boot - Unable to load Bootloader Prefab \"{bootloaderPath}\".");
-                        return;
-                    }
-
-                    break;
-                }
-
-                case Lost.BootloaderLocation.SceneName:
-                {
-                    if (IsSceneLoaded(bootloaderPath) == false)
-                    {
-                        SceneManager.LoadScene(bootloaderPath, LoadSceneMode.Additive);
-                    }
-
-                    break;
-                }
-
-                default:
-                {
-                    Debug.LogError($"Unknown BootloaderLocation type found {(BootloaderLocation)bootloaderLocationIntValue}!");
-                    return;
-                }
+            if (IsBootloaderOpen() == false)
+            {
+                SceneManager.LoadScene(BootloaderSceneName, LoadSceneMode.Additive);
             }
 
             static bool ShouldRunBootloader()
@@ -166,75 +240,41 @@ namespace Lost
 
                 return true;
             }
-        }
 
-        [EditorEvents.OnExitPlayMode]
-        private static void ResetBootloader()
-        {
-            if (bootloaderInstance != null)
+            static bool IsBootloaderOpen()
             {
-                if (Application.isPlaying)
+                for (int i = 0; i < SceneManager.sceneCount; i++)
                 {
-                    GameObject.Destroy(bootloaderInstance.gameObject);
+                    if (SceneManager.GetSceneAt(i).name == Bootloader.BootloaderSceneName)
+                    {
+                        return true;
+                    }
                 }
-                else
-                {
-                    GameObject.DestroyImmediate(bootloaderInstance.gameObject);
-                }
+
+                return false;
             }
-
-            if (managersInstance != null)
-            {
-                if (Application.isPlaying)
-                {
-                    GameObject.Destroy(managersInstance);
-                }
-                else
-                {
-                    GameObject.DestroyImmediate(managersInstance);
-                }
-            }
-
-            bootloaderInstance = null;
-            managersInstance = null;
         }
-
-        private static GameObject InstantiateResource(string path)
-        {
-            var instance = GameObject.Instantiate(Resources.Load<GameObject>(path));
-            instance.name = instance.name.Replace("(Clone)", string.Empty);
-            DontDestroyOnLoad(instance);
-
-            return instance;
-        }
-
-        private static bool IsSceneLoaded(string sceneName)
-        {
-            bool sceneAlreadyLoaded = false;
-
-            for (int i = 0; i < SceneManager.sceneCount; i++)
-            {
-                sceneAlreadyLoaded |= SceneManager.GetSceneAt(i).name == sceneName;
-            }
-
-            return sceneAlreadyLoaded;
-        }
-
+      
         private void Start()
         {
             this.StartCoroutine(this.Bootup());
         }
 
-        //// private void OnDestroy()
-        //// {
-        ////     // Clean up lazy assets only if they were instantiated
-        ////     this.managersAddressablesPrefab.Release();
-        ////     this.managersAddressablesScene.Release();
-        //// }
+        // NOTE [bgish]: Make sure this gets called when exiting PlayMode
+        private void OnDestroy()
+        {
+            if (this.bootloaderConfig?.RequiredScenes?.Count > 0)
+            {
+                foreach (var asset in this.bootloaderConfig.RequiredScenes)
+                {
+                    asset.Unload();
+                }
+            }
+        }
 
         private IEnumerator Bootup()
         {
-            this.bootloaderDialog.Show();
+            this.bootloaderDialog.Dialog.Show();
 
             yield return ReleasesManager.WaitForInitialization();
 
@@ -242,7 +282,8 @@ namespace Lost
 
             yield return AddressablesManager.WaitForInitialization();
 
-            yield return this.StartManagers();
+            // Get the boot config
+            // Load all the assets
 
             float startTime = Time.realtimeSinceStartup;
 
@@ -257,8 +298,8 @@ namespace Lost
             //// }
 
             // Destorying the Loading camera now that the startup scene is loaded (the loading dialog will find the new camera automatically)
-            GameObject.DestroyImmediate(this.loadingCamera.gameObject);
-            DialogManager.UpdateAllDialogCameras();
+            this.loadingCamera.gameObject.SetActive(false);
+            DialogManager.ForceUpdateDialogCameras(Camera.main);
 
             // Making sure we wait the minimum time
             if (this.ShowLoadingInEditor && this.bootloaderDialog)
@@ -271,7 +312,7 @@ namespace Lost
                 }
 
                 // Making sure we don't say Hide if we're still showing (has a bad pop)
-                while (this.bootloaderDialog.IsShown == false)
+                while (this.bootloaderDialog.Dialog.IsShown == false)
                 {
                     yield return null;
                 }
@@ -285,42 +326,7 @@ namespace Lost
             
             if (this.ShowLoadingInEditor && this.bootloaderDialog)
             {
-                this.bootloaderDialog.Hide();
-            }
-        }
-
-        private IEnumerator StartManagers()
-        {
-            if (int.TryParse(RuntimeBuildConfig.Instance.GetString(BootloaderManagersLocation), out int maangersLocationIntValue) == false)
-            {
-                Debug.LogError($"Unable to startup Managers.  ManagerLocation was not a valid int \"{BootloaderManagersLocation}\"", this);
-                yield break;
-            }
-
-            var managersLocation = (ManagersLocation)maangersLocationIntValue;
-            var managersPath = RuntimeBuildConfig.Instance.GetString(BootloaderManagersPath);
-
-            switch (managersLocation)
-            {
-                case ManagersLocation.ResourcesPath:
-                {
-                    managersInstance = InstantiateResource(managersPath);
-                    break;
-                }
-
-                case ManagersLocation.SceneName:
-                {
-                    if (IsSceneLoaded(managersPath) == false)
-                    {
-                        yield return SceneManager.LoadSceneAsync(managersPath, LoadSceneMode.Additive);
-                    }
-
-                    break;
-                }
-
-                default:
-                    Debug.LogError($"Unknown ManagerLocation {managersLocation} Found!");
-                    break;
+                this.bootloaderDialog.Dialog.Hide();
             }
         }
 

@@ -13,26 +13,21 @@ namespace Lost
     using Lost.BuildConfig;
     using UnityEditor;
     using UnityEngine;
+    using UnityEngine.SceneManagement;
 
     [BuildConfigSettingsOrder(8)]
     public class BootloaderSettings : BuildConfigSettings
     {
-#pragma warning disable 0649
-        [Header("Bootloader")]
-        [SerializeField] private BootloaderLocation bootloaderLocation;
-        [SerializeField] private string bootloaderPath = Bootloader.LostBootloaderResourcePath;
-
-        [Header("Managers")]
-        [SerializeField] private ManagersLocation managersLocation;
-        [SerializeField] private string managersPath = Bootloader.LostManagersResourcePath;
-
-        [Header("Reboot")]
-        [SerializeField] private string rebootSceneName = Bootloader.DefaultRebootSceneName;
+        #pragma warning disable 0649
+        public BootloaderConfigLocation bootloaderConfigLocation;
+        
+        [ShowIf("bootConfigLocation", BootloaderConfigLocation.RuntimeConfigSettings)]
+        public BootloaderConfig bootloaderConfig;
 
         [Header("Scenes To Ignore")]
         [Tooltip("A ';' delimited list of scene names that should not startup the bootloader process.")]
         [SerializeField] private string scenesToIgnore;
-#pragma warning restore 0649
+        #pragma warning restore 0649
 
         public override string DisplayName => "Bootloader Settings";
 
@@ -47,18 +42,16 @@ namespace Lost
                 return;
             }
 
-            // Bootloader
-            runtimeConfigSettings.Add(Bootloader.BootloaderLocation, ((int)settings.bootloaderLocation).ToString());
-            runtimeConfigSettings.Add(Bootloader.BootloaderPath, settings.bootloaderPath);
+            // Bootloader Location
+            runtimeConfigSettings.Add(Bootloader.BootloaderConfigLocation, ((int)settings.bootloaderConfigLocation).ToString());
 
-            // Managers
-            runtimeConfigSettings.Add(Bootloader.BootloaderManagersLocation, ((int)settings.managersLocation).ToString());
-            runtimeConfigSettings.Add(Bootloader.BootloaderManagersPath, settings.managersPath);
+            // Bootloader Config
+            if (settings.bootloaderConfigLocation == BootloaderConfigLocation.RuntimeConfigSettings)
+            {
+                runtimeConfigSettings.Add(Bootloader.BootloaderConfig, JsonUtil.Serialize(settings.bootloaderConfig));
+            }
 
-            // Reboot
-            runtimeConfigSettings.Add(Bootloader.BootloaderRebootSceneName, settings.rebootSceneName);
-
-            // Ignoring
+            // Ignored Scenes
             runtimeConfigSettings.Add(Bootloader.BootloaderIgnoreSceneNames, settings.scenesToIgnore);
         }
 
