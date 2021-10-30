@@ -19,10 +19,11 @@ namespace Lost
     public class BootloaderSettings : BuildConfigSettings
     {
         #pragma warning disable 0649
-        public BootloaderConfigLocation bootloaderConfigLocation;
+        [SerializeField] private string bootloaderResourcePath = Bootloader.BootloaderResourcePath;
+        [SerializeField] private BootloaderConfigLocation bootloaderConfigLocation;
         
-        [ShowIf("bootConfigLocation", BootloaderConfigLocation.RuntimeConfigSettings)]
-        public BootloaderConfig bootloaderConfig;
+        [ShowIf("bootloaderConfigLocation", BootloaderConfigLocation.RuntimeConfigSettings)]
+        [SerializeField] private BootloaderConfig bootloaderConfig;
 
         [Header("Scenes To Ignore")]
         [Tooltip("A ';' delimited list of scene names that should not startup the bootloader process.")]
@@ -41,6 +42,9 @@ namespace Lost
             {
                 return;
             }
+
+            // Bootloader Resource Path
+            runtimeConfigSettings.Add(Bootloader.BootloaderResourcePath, settings.bootloaderResourcePath);
 
             // Bootloader Location
             runtimeConfigSettings.Add(Bootloader.BootloaderConfigLocation, ((int)settings.bootloaderConfigLocation).ToString());

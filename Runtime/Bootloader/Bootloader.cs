@@ -27,14 +27,6 @@ namespace Lost
         Releases,
     }
 
-    public enum AssetType
-    {
-        SceneName,
-        SceneAddressable,
-        PrefabResources,
-        PrefabAddressable,
-    }
-
     [Serializable]
     public class RequiredScene
     {
@@ -55,66 +47,37 @@ namespace Lost
             set => this.sceneAddressablesPath = value;
         }
 
-        public void Load()
+        public IEnumerator LoadScene()
         {
             if (IsSceneLoaded(this.sceneName) == false)
             {
-                if (string.IsNullOrWhiteSpace(this.SceneAddressablesPath))
+                if (string.IsNullOrWhiteSpace(this.SceneAddressablesPath) == false)
                 {
-                    throw new NotImplementedException();
+                    yield return UnityEngine.AddressableAssets.Addressables.LoadSceneAsync(this.SceneAddressablesPath, LoadSceneMode.Additive);
                 }
                 else
                 {
-                    SceneManager.LoadScene(this.sceneName, LoadSceneMode.Additive);
+                    yield return SceneManager.LoadSceneAsync(this.sceneName, LoadSceneMode.Additive);
                 }
             }
         }
 
-        public void Unload()
+        public bool IsLoaded()
         {
-            // if (bootloaderInstance != null)
-            // {
-            //     if (Application.isPlaying)
-            //     {
-            //         GameObject.Destroy(bootloaderInstance.gameObject);
-            //     }
-            //     else
-            //     {
-            //         GameObject.DestroyImmediate(bootloaderInstance.gameObject);
-            //     }
-            // }
-            // 
-            // if (managersInstance != null)
-            // {
-            //     if (Application.isPlaying)
-            //     {
-            //         GameObject.Destroy(managersInstance);
-            //     }
-            //     else
-            //     {
-            //         GameObject.DestroyImmediate(managersInstance);
-            //     }
-            // }
-        }
-
-        private static GameObject InstantiateResource(string path)
-        {
-            var instance = GameObject.Instantiate(Resources.Load<GameObject>(path));
-            instance.name = instance.name.Replace("(Clone)", string.Empty);
-            SceneManager.MoveGameObjectToScene(instance, SceneManager.GetSceneByName(Bootloader.BootloaderSceneName));
-            return instance;
+            return SceneManager.GetSceneByName(this.sceneName).isLoaded;
         }
 
         private static bool IsSceneLoaded(string sceneName)
         {
-            bool sceneAlreadyLoaded = false;
-
             for (int i = 0; i < SceneManager.sceneCount; i++)
             {
-                sceneAlreadyLoaded |= SceneManager.GetSceneAt(i).name == sceneName;
+                if (SceneManager.GetSceneAt(i).name == sceneName)
+                {
+                    return true;
+                }
             }
 
-            return sceneAlreadyLoaded;
+            return false;
         }
     }
 
@@ -132,11 +95,16 @@ namespace Lost
 
     public class Bootloader : MonoBehaviour
     {
+        // Constants
+        public const string DefaultBootloaderResourcePath = "Lost/Bootloader";
+
         // RuntimeConfig Settings Keys
-        public const string BootloaderSceneName = "Bootloader";
+        public const string BootloaderResourcePath = "Bootloader.ResourcePath";
         public const string BootloaderConfigLocation = "Bootloader.ConfigLocation";
         public const string BootloaderConfig = "Bootloader.Config";
         public const string BootloaderIgnoreSceneNames = "Bootloader.IgnoreSceneNames";
+
+        private static Bootloader bootloaderInstance;
 
 #pragma warning disable 0649
         [Header("Loading UI")]
@@ -167,21 +135,22 @@ namespace Lost
 
         public static void Reboot()
         {
-            // this.loadingCamera.gameObject.SetActive(true);
-            // DialogManager.ForceUpdateDialogCameras(this.loadingCamera);
-            // Show Bootloader Dialog
-            // Update text to say Shutting Down
-
-            var reboot = new GameObject("Reboot", typeof(EmptyBehaviour));
-            var empty = reboot.GetComponent<EmptyBehaviour>();
-            GameObject.DontDestroyOnLoad(reboot);
-            empty.StartCoroutine(Coroutine(reboot));
-
-            //// TODO [bgish]: May need to create a Reboot prefab that is instantiated with a Camera that renders nothing but black, since 
-            ////               Unloading all scene will remove all cameras which can cause unusual behaviour.
-
-            static IEnumerator Coroutine(GameObject rebootGameObject)
+            if (bootloaderInstance == null)
             {
+                Debug.LogError("Reboot failed, bootloader never booted up correctly.");
+                return;
+            }
+
+            bootloaderInstance.StartCoroutine(Coroutine());
+
+            static IEnumerator Coroutine()
+            {
+                bootloaderInstance.loadingCamera.gameObject.SetActive(true);
+                DialogManager.ForceUpdateDialogCameras(bootloaderInstance.loadingCamera);
+                bootloaderInstance.bootloaderDialog.Dialog.Show();
+
+                // TODO [bgish]: Update text to say Shutting Down
+
                 while (SceneManager.sceneCount > 0)
                 {
                     yield return SceneManager.UnloadSceneAsync(SceneManager.GetSceneAt(0));
@@ -190,18 +159,19 @@ namespace Lost
                 // TODO [bgish]: Once Bootloader has moved back into Core, move this back into Bootloader
                 Platform.Reset();
 
-                GameObject.Destroy(rebootGameObject);
-
-                BootBootloader();
+                bootloaderInstance.StartBootupSequence();
             }
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void BootBootloader()
+        private static void CreateBootloaderObject()
         {
+            string bootloaderResourcesPath = RuntimeBuildConfig.Instance.GetString(BootloaderResourcePath);
             string bootloaderConfigLocation = RuntimeBuildConfig.Instance.GetString(BootloaderConfigLocation);
 
-            if (string.IsNullOrWhiteSpace(bootloaderConfigLocation) || ShouldRunBootloader() == false)
+            if (string.IsNullOrWhiteSpace(bootloaderResourcesPath) ||
+                string.IsNullOrWhiteSpace(bootloaderConfigLocation) || 
+                ShouldRunBootloader() == false)
             {
                 return;
             }
@@ -213,16 +183,29 @@ namespace Lost
                 return;
             }
 
+            // Making sure bootloader location is a valid value
             if (bootloaderLocationIntValue != 0 && bootloaderLocationIntValue != 1)
             {
                 Debug.LogError($"Unable to startup Bootloader.  BootloaderConfigLocation was not a valid value \"{bootloaderLocationIntValue}\"");
                 return;
             }
 
-            if (IsBootloaderOpen() == false)
+            // Loading the Bootloader object
+            var bootloaderPrefab = Resources.Load<Bootloader>(bootloaderResourcesPath);
+
+            // Making sure Bootloader Prefab exits
+            if (bootloaderPrefab == null)
             {
-                SceneManager.LoadScene(BootloaderSceneName, LoadSceneMode.Additive);
+                Debug.LogError($"Unable to startup Bootloader.  Unable to load Bootlaoder prefab at bootloaderResourcesPath {bootloaderResourcesPath}");
+                return;
             }
+
+            // Creating the Bootloader instance
+            bootloaderInstance = GameObject.Instantiate(bootloaderPrefab);
+            bootloaderInstance.name = bootloaderInstance.name.Replace("(Clone)", string.Empty);
+            GameObject.DontDestroyOnLoad(bootloaderInstance);
+
+            bootloaderInstance.StartBootupSequence();
 
             static bool ShouldRunBootloader()
             {
@@ -240,128 +223,126 @@ namespace Lost
 
                 return true;
             }
+        }
 
-            static bool IsBootloaderOpen()
+        private Coroutine StartBootupSequence()
+        {
+            return this.StartCoroutine(Coroutine());
+
+            IEnumerator Coroutine()
             {
-                for (int i = 0; i < SceneManager.sceneCount; i++)
+                float startTime = Time.realtimeSinceStartup;
+                this.bootloaderDialog.Dialog.Show();
+
+                yield return DialogManager.WaitForInitialization();
+                yield return ReleasesManager.WaitForInitialization();
+                yield return ReleasesManager.Instance.ShowForceUpdateDialog();
+                yield return AddressablesManager.WaitForInitialization();
+
+                // Getting the Bootloader Config
+                string bootloaderConfigLocation = RuntimeBuildConfig.Instance.GetString(BootloaderConfigLocation);
+                int bootloaderCongigLocationInt = int.Parse(bootloaderConfigLocation);
+                var bootloaderLocation = (BootloaderConfigLocation)bootloaderCongigLocationInt;
+
+                if (bootloaderLocation == Lost.BootloaderConfigLocation.RuntimeConfigSettings)
                 {
-                    if (SceneManager.GetSceneAt(i).name == Bootloader.BootloaderSceneName)
+                    string bootloaderConfigJson = RuntimeBuildConfig.Instance.GetString(BootloaderConfig);
+                    this.bootloaderConfig = JsonUtil.Deserialize<BootloaderConfig>(bootloaderConfigJson);
+                }
+                else if (bootloaderLocation == Lost.BootloaderConfigLocation.Releases)
+                {
+                    throw new NotImplementedException();
+                }
+                else
+                {
+                    Debug.LogError($"Unknown BootloaderConfigLocation encountered {bootloaderLocation}");
+                    yield break;
+                }
+
+                // Loading all Required Scenes
+                foreach (var requiredScene in this.bootloaderConfig.RequiredScenes)
+                {
+                    yield return requiredScene.LoadScene();
+
+                    while (requiredScene.IsLoaded() == false)
                     {
-                        return true;
+                        yield return null;
                     }
                 }
-
-                return false;
-            }
-        }
-      
-        private void Start()
-        {
-            this.StartCoroutine(this.Bootup());
-        }
-
-        // NOTE [bgish]: Make sure this gets called when exiting PlayMode
-        private void OnDestroy()
-        {
-            if (this.bootloaderConfig?.RequiredScenes?.Count > 0)
-            {
-                foreach (var asset in this.bootloaderConfig.RequiredScenes)
-                {
-                    asset.Unload();
-                }
-            }
-        }
-
-        private IEnumerator Bootup()
-        {
-            this.bootloaderDialog.Dialog.Show();
-
-            yield return ReleasesManager.WaitForInitialization();
-
-            yield return ReleasesManager.Instance.ShowForceUpdateDialog();
-
-            yield return AddressablesManager.WaitForInitialization();
-
-            // Get the boot config
-            // Load all the assets
-
-            float startTime = Time.realtimeSinceStartup;
-
-            yield return this.WaitForManagersToInitialize();
-
-            //// // If the only scene open is the bootloader scene, then lets load the startup scene
-            //// if (SceneManager.sceneCount == 1 && this.startupScene != null && this.startupScene.AssetGuid.IsNullOrWhitespace() == false)
-            //// {
-            ////     var loadScene = this.startupScene.LoadScene(LoadSceneMode.Additive);
-            ////     yield return loadScene;
-            ////     SceneManager.SetActiveScene(loadScene.Result.Scene);
-            //// }
-
-            // Destorying the Loading camera now that the startup scene is loaded (the loading dialog will find the new camera automatically)
-            this.loadingCamera.gameObject.SetActive(false);
-            DialogManager.ForceUpdateDialogCameras(Camera.main);
-
-            // Making sure we wait the minimum time
-            if (this.ShowLoadingInEditor && this.bootloaderDialog)
-            {
-                float elapsedTime = Time.realtimeSinceStartup - startTime;
-
-                if (elapsedTime < this.minimumLoadingDialogTime)
-                {
-                    yield return WaitForUtil.Seconds(this.minimumLoadingDialogTime - elapsedTime);
-                }
-
-                // Making sure we don't say Hide if we're still showing (has a bad pop)
-                while (this.bootloaderDialog.Dialog.IsShown == false)
-                {
-                    yield return null;
-                }
-            }
-
-            // Doing a little cleanup before giving user control
-            System.GC.Collect();
-            yield return null;
-
-            // TODO [bgish]:  We're done!  Fire the OnBooted event????
-            
-            if (this.ShowLoadingInEditor && this.bootloaderDialog)
-            {
-                this.bootloaderDialog.Dialog.Hide();
-            }
-        }
-
-        private IEnumerator WaitForManagersToInitialize()
-        {
-            int initialManagersCount = Lost.ManagersReady.Managers.Count;
-            List<IManager> managers = new List<IManager>(initialManagersCount);
-            List<IManager> managersToRemove = new List<IManager>(initialManagersCount);
-
-            // Populating the manager list with all known managers
-            for (int i = 0; i < initialManagersCount; i++)
-            {
-                managers.Add(Lost.ManagersReady.Managers[i]);
-            }
-
-            while (managers.Count > 0)
-            {
-                managersToRemove.Clear();
-
-                foreach (var manager in managers)
-                {
-                    if (manager.IsManagerInitialized())
-                    {
-                        managersToRemove.Add(manager);
-                    }
-                }
-
-                foreach (var managerToRemvoe in managersToRemove)
-                {
-                    managers.Remove(managerToRemvoe);
-                }
-
-                ProgressUpdated?.Invoke(1.0f - (managers.Count / (float)initialManagersCount));
 
                 yield return null;
+                yield return null;
+                yield return null;
+
+                // Waiting for all managers to finish loading
+                yield return WaitForManagersToInitialize();
+
+                // Disabling the Loading camera now that all required scenes are loaded
+                this.loadingCamera.gameObject.SetActive(false);
+                DialogManager.ForceUpdateDialogCameras(Camera.main);
+
+                // Making sure we wait the minimum time
+                if (this.ShowLoadingInEditor && this.bootloaderDialog)
+                {
+                    float elapsedTime = Time.realtimeSinceStartup - startTime;
+
+                    if (elapsedTime < this.minimumLoadingDialogTime)
+                    {
+                        yield return WaitForUtil.Seconds(this.minimumLoadingDialogTime - elapsedTime);
+                    }
+
+                    // Making sure we don't say Hide if we're still showing (has a bad pop)
+                    while (this.bootloaderDialog.Dialog.IsShown == false)
+                    {
+                        yield return null;
+                    }
+                }
+
+                // Doing a little cleanup before giving user control
+                System.GC.Collect();
+                yield return null;
+
+                // TODO [bgish]:  We're done!  Fire the OnBooted event????
+
+                if (this.ShowLoadingInEditor && this.bootloaderDialog)
+                {
+                    this.bootloaderDialog.Dialog.Hide();
+                }
+            }
+
+            IEnumerator WaitForManagersToInitialize()
+            {
+                int initialManagersCount = Lost.ManagersReady.Managers.Count;
+                List<IManager> managers = new List<IManager>(initialManagersCount);
+                List<IManager> managersToRemove = new List<IManager>(initialManagersCount);
+
+                // Populating the manager list with all known managers
+                for (int i = 0; i < initialManagersCount; i++)
+                {
+                    managers.Add(Lost.ManagersReady.Managers[i]);
+                }
+
+                while (managers.Count > 0)
+                {
+                    managersToRemove.Clear();
+
+                    foreach (var manager in managers)
+                    {
+                        if (manager.IsManagerInitialized())
+                        {
+                            managersToRemove.Add(manager);
+                        }
+                    }
+
+                    foreach (var managerToRemvoe in managersToRemove)
+                    {
+                        managers.Remove(managerToRemvoe);
+                    }
+
+                    ProgressUpdated?.Invoke(1.0f - (managers.Count / (float)initialManagersCount));
+
+                    yield return null;
+                }
             }
         }
     }
