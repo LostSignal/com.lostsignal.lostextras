@@ -14,7 +14,7 @@ namespace Lost.Haven
     using UnityEngine.XR.Interaction.Toolkit;
 
     [AddComponentMenu("Haven XR/Interactables/HXR Grabbable")]
-    public class HavenGrabbable : BetterXRGrabInteractable
+    public class HavenGrabbable : XRGrabInteractable
     {
 #pragma warning disable 0649
         [Header("Haven Variables")]
@@ -91,6 +91,7 @@ namespace Lost.Haven
                 }
 
                 this.attachTransform.position = selectEnterEventArgs.interactor.attachTransform.position;
+                this.attachTransform.rotation = selectEnterEventArgs.interactor.attachTransform.rotation;
 
                 // Fixing bug with tighten position and direct interactors
                 bool isDirect = selectEnterEventArgs.interactor is XRDirectInteractor;
