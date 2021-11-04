@@ -12,14 +12,15 @@ namespace Lost.Haven
     using UnityEngine;
     using UnityEngine.Events;
     using UnityEngine.XR.Interaction.Toolkit;
-#if UNITY_EDITOR
+
+    #if UNITY_EDITOR
     using UnityEditor;
-#endif
+    #endif
 
     [AddComponentMenu("Haven XR/Interactables/HXR Dial Interactable")]
     public class HavenDialInteractable : XRBaseInteractable
     {
-#pragma warning disable 0649
+        #pragma warning disable 0649
         [SerializeField] private InteractionType dialType = InteractionType.ControllerRotation;
         [SerializeField] private Rigidbody rotatingRigidbody;
         [SerializeField] private Vector3 localRotationAxis;
@@ -30,7 +31,7 @@ namespace Lost.Haven
         [SerializeField] private int steps = 0;
         [SerializeField] private bool snapOnRelease = true;
         [SerializeField] private AudioBlock snapAudioBlock;
-#pragma warning restore 0649
+        #pragma warning restore 0649
 
         private XRBaseInteractor grabbingInteractor;
         private Quaternion grabbedRotation;
@@ -269,14 +270,13 @@ namespace Lost.Haven
             }
         }
 
-#if UNITY_EDITOR
+        #if UNITY_EDITOR
         private void OnDrawGizmosSelected()
         {
             Handles.color = new Color(1.0f, 0.0f, 0.0f, 0.5f);
             Handles.DrawSolidArc(this.transform.position, this.transform.TransformDirection(this.localRotationAxis), this.transform.TransformDirection(this.localAxisStart), this.rotationAngleMaximum, 0.2f);
         }
-
-#endif
+        #endif
 
         [System.Serializable]
         public class DialTurnedAngleEvent : UnityEvent<float>

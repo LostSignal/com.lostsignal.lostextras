@@ -30,7 +30,7 @@ namespace Lost.Haven
 
         public bool CanSocket(HavenSocketInteractor havenSocketInteractor)
         {
-            bool isExclusiveSocket = string.IsNullOrWhiteSpace(this.socketType);
+            bool isExclusiveSocket = string.IsNullOrWhiteSpace(this.socketType) == false;
             return havenSocketInteractor != null && (isExclusiveSocket == false || this.socketType == havenSocketInteractor.AcceptedType);
         }
 

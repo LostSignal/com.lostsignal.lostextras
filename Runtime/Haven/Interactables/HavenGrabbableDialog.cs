@@ -24,7 +24,7 @@ namespace Lost.Haven
             this.movementType = XRBaseInteractable.MovementType.Instantaneous;
             this.attachEaseInTime = -1.0f;
             this.throwOnDetach = false;
-            this.gravityOnDetach = false;
+            this.forceGravityOnDetach = false;
 
             this.trackPosition = true;
             this.smoothPosition = true;

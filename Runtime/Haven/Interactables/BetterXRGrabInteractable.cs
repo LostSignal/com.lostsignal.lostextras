@@ -1,7 +1,5 @@
 ﻿#pragma warning disable
 
-#pragma warning disable
-
 #if UNITY && USING_UNITY_XR_INTERACTION_TOOLKIT
 
 using System;
