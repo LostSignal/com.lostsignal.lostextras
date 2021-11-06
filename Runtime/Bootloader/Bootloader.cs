@@ -312,8 +312,6 @@ namespace Lost
 
             IEnumerator WaitForManagersToInitialize()
             {
-                ManagersReady.Instance.WaitForManagers();
-
                 int initialManagersCount = Lost.ManagersReady.Managers.Count;
                 List<IManager> managers = new List<IManager>(initialManagersCount);
                 List<IManager> managersToRemove = new List<IManager>(initialManagersCount);
