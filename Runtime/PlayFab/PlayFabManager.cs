@@ -340,11 +340,6 @@ namespace Lost.PlayFab
             return this.Do<MatchmakeRequest, MatchmakeResult>(request, PlayFabClientAPI.MatchmakeAsync);
         }
 
-        public UnityTask<StartGameResult> Do(StartGameRequest request)
-        {
-            return this.Do<StartGameRequest, StartGameResult>(request, PlayFabClientAPI.StartGameAsync);
-        }
-
         public UnityTask<TResult> Do<TRequest, TResult>(TRequest request, Func<TRequest, object, Dictionary<string, string>, Task<PlayFabResult<TResult>>> playfabFunction)
             where TRequest : PlayFabRequestCommon
             where TResult : PlayFabResultCommon
