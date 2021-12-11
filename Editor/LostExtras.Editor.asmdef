@@ -2,6 +2,10 @@
     "name": "LostExtras.Editor",
     "rootNamespace": "",
     "references": [
+        "GUID:8e683a3d6d1f7a74da811ef5727a2526",
+        "GUID:9c9eac44720c8e148964962a0bc81f19",
+        "GUID:94e923388c83f51458a45deb445b5a6c",
+        "GUID:2178152a2c2e131408cb307c8f8eefe5",
         "GUID:db13a9bcb59aac84e894a0084f1124e1",
         "GUID:990bca087afc58b44abfab274b5997a0",
         "GUID:69448af7b92c7f342b298e06a37122aa",
@@ -9,9 +13,7 @@
         "GUID:84651a3751eca9349aac36a66bba901b",
         "GUID:e9244de365e87924c955165fd5894cf4",
         "GUID:61106e8dfb7a4e64a96af0eccfe1209f",
-        "GUID:190979c3ed6e41c448f5e9925429edf9",
-        "GUID:94e923388c83f51458a45deb445b5a6c",
-        "GUID:2178152a2c2e131408cb307c8f8eefe5"
+        "GUID:190979c3ed6e41c448f5e9925429edf9"
     ],
     "includePlatforms": [
         "Editor"

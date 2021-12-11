@@ -2,10 +2,11 @@
     "name": "LostLibrary.LBE",
     "rootNamespace": "",
     "references": [
+        "GUID:8e683a3d6d1f7a74da811ef5727a2526",
+        "GUID:94e923388c83f51458a45deb445b5a6c",
         "GUID:db13a9bcb59aac84e894a0084f1124e1",
         "GUID:4307f53044263cf4b835bd812fc161a4",
-        "GUID:75469ad4d38634e559750d17036d5f7c",
-        "GUID:94e923388c83f51458a45deb445b5a6c"
+        "GUID:75469ad4d38634e559750d17036d5f7c"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

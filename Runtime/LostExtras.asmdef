@@ -2,6 +2,8 @@
     "name": "LostExtras",
     "rootNamespace": "",
     "references": [
+        "GUID:8e683a3d6d1f7a74da811ef5727a2526",
+        "GUID:94e923388c83f51458a45deb445b5a6c",
         "GUID:9e24947de15b9834991c9d8411ea37cf",
         "GUID:6055be8ebefd69e48b49212b09b47b2f",
         "GUID:84651a3751eca9349aac36a66bba901b",
@@ -20,8 +22,7 @@
         "GUID:ea715009a4efd4c6cbc85be3ae097dd3",
         "GUID:315d634a9ac6d460a9515f5a56be6311",
         "GUID:4307f53044263cf4b835bd812fc161a4",
-        "GUID:7f7d1af65c2641843945d409d28f2e20",
-        "GUID:94e923388c83f51458a45deb445b5a6c"
+        "GUID:7f7d1af65c2641843945d409d28f2e20"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
