@@ -18,8 +18,7 @@ namespace Lost
 #pragma warning restore 0649
 
 #if USING_UNITY_INPUT_SYSTEM
-        private KeyCode keyCodeCache = KeyCode.None;
-        private string keyCodeString = null;
+        private UnityEngine.InputSystem.Controls.KeyControl keyboardKey = null;
 #endif
 
         private float fingerHoldTime = 0.0f;
@@ -62,22 +61,18 @@ namespace Lost
         private void CheckKeyboard()
         {
 #if USING_UNITY_INPUT_SYSTEM
-            if (this.keyCodeString.IsNullOrWhitespace() || this.keyCodeCache != this.debugMenu.Settings.Key)
+
+            if (this.keyboardKey == null)
             {
-                this.keyCodeCache = this.debugMenu.Settings.Key;
-                this.keyCodeString = this.debugMenu.Settings.Key.ToString();
+                var keyboard = UnityEngine.InputSystem.Keyboard.current;
+
+                if (keyboard != null)
+                {
+                    this.keyboardKey = keyboard.FindKeyOnCurrentKeyboardLayout(this.debugMenu.Settings.Key.ToString());
+                }
             }
 
-            var keyboard = UnityEngine.InputSystem.Keyboard.current;
-            var isKeyPressed = false;
-
-            if (keyboard != null)
-            {
-                var key = keyboard.FindKeyOnCurrentKeyboardLayout(this.keyCodeString);
-                isKeyPressed = key.wasPressedThisFrame;
-            }
-
-            if (isKeyPressed)
+            if (keyboardKey.wasPressedThisFrame)
 #else
             if (UnityEngine.Input.GetKey(this.debugMenu.Settings.Key))
 #endif
