@@ -30,23 +30,29 @@ namespace Lost.PlantGenerator
         [Tooltip("The Mesh's parent that will be rotated to make sure this mesh always points to the MeshAimTarget.")]
         [FormerlySerializedAs("Mesh")]
         [SerializeField] private Transform mesh;
+
+        [ReadOnly]
+        [Tooltip("This is auto populated in Editor by grabbing the aimTarget's Rigidbody.")]
+        [SerializeField] private Rigidbody aimTargetRigidbody;
 #pragma warning restore 0649
-
-        private Rigidbody aimTargetRigidbody;
-
-        private void Awake()
-        {
-            this.aimTargetRigidbody = this.aimTarget.GetComponent<Rigidbody>();
-        }
 
         /// <summary>
         /// Updates the MeshRoot rotation point towards the mesh aim target.
         /// </summary>
-        private void Update()
+        public void UpdateBranch(float deltaTime)
         {
             if (this.aimTargetRigidbody.IsSleeping() == false)
             {
-                this.mesh.rotation = Quaternion.Lerp(this.mesh.rotation, this.aimTarget.rotation, this.lerpSpeed * Time.deltaTime);
+                this.mesh.rotation = Quaternion.Lerp(this.mesh.rotation, this.aimTarget.rotation, this.lerpSpeed * deltaTime);
+            }
+        }
+
+        private void OnValidate()
+        {
+            if (this.aimTargetRigidbody == null && this.aimTarget != null)
+            {
+                this.aimTargetRigidbody = this.aimTarget.GetComponent<Rigidbody>();
+                EditorUtil.SetDirty(this);
             }
         }
     }

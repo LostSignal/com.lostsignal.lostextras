@@ -9,6 +9,7 @@
 namespace Lost.PlantGenerator
 {
     using System.Collections;
+    using System.Collections.Generic;
     using UnityEngine;
     using UnityEngine.Serialization;
 
@@ -33,10 +34,17 @@ namespace Lost.PlantGenerator
         [SerializeField]
         private int seed;
 
+        [Header("Read Only")]
+        [ReadOnly]
         [Tooltip("Flag specifying whether or not the plant has been generated yet.")]
         [FormerlySerializedAs("IsGenerated")]
         [SerializeField]
         private bool isGenerated;
+
+        [ReadOnly]
+        [Tooltip("This stores all the branches this PlantGenerator manages.")]
+        [SerializeField] 
+        private List<PlantGeneratorBranch> branches;
 #pragma warning restore 0649
 
         /// <summary>
@@ -69,14 +77,14 @@ namespace Lost.PlantGenerator
         /// </summary>
         public void ClearChildren()
         {
-            PlantGeneratorBranch[] branches = this.GetComponentsInChildren<PlantGeneratorBranch>();
-
-            if (branches != null)
+            if (this.branches != null)
             {
-                for (int i = 0; i < branches.Length; i++)
+                for (int i = 0; i < this.branches.Count; i++)
                 {
-                    GameObject.DestroyImmediate(branches[i].gameObject);
+                    GameObject.DestroyImmediate(this.branches[i].gameObject);
                 }
+
+                this.branches.Clear();
             }
 
             this.isGenerated = false;
@@ -90,6 +98,26 @@ namespace Lost.PlantGenerator
         {
             this.ClearChildren();
             this.Generate();
+        }
+
+        private void OnValidate()
+        {
+            if (this.branches == null)
+            {
+                this.branches = new List<PlantGeneratorBranch>();
+                EditorUtil.SetDirty(this);
+            }
+
+            if (this.branches.Count == 0)
+            {
+                var existingBranches = this.GetComponentsInChildren<PlantGeneratorBranch>();
+
+                if (existingBranches?.Length > 0)
+                {
+                    this.branches.AddRange(existingBranches);
+                    EditorUtil.SetDirty(this);
+                }
+            }
         }
 
         /// <summary>
@@ -128,6 +156,19 @@ namespace Lost.PlantGenerator
             if (this.destroyChildren)
             {
                 this.ClearChildren();
+            }
+        }
+
+        private void Update()
+        {
+            float deltaTime = Time.deltaTime;
+
+            if (this.branches != null)
+            {
+                for (int i = 0; i < this.branches.Count; i++)
+                {
+                    this.branches[i].UpdateBranch(deltaTime);
+                }
             }
         }
 
@@ -252,11 +293,15 @@ namespace Lost.PlantGenerator
                             }
                         }
                     }
+
+                    this.branches.Add(plantBranch);
                 }
 
                 // if we got here then everything generated properly
                 this.isGenerated = true;
                 this.destroyChildren = true;
+                
+                EditorUtil.SetDirty(this);
             }
         }
     }
