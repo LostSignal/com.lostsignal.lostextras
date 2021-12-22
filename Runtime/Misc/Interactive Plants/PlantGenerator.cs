@@ -28,11 +28,6 @@ namespace Lost.PlantGenerator
         [SerializeField]
         private PlantDefinition plantDefinition;
 
-        [Tooltip("Set this if you always want the plant to look different when you run the game.")]
-        [FormerlySerializedAs("RandomizeOnStart")]
-        [SerializeField]
-        private bool randomizeOnStart;
-
         [Tooltip("The random seed used to generate the looks of this generated plant.")]
         [FormerlySerializedAs("Seed")]
         [SerializeField]
@@ -80,7 +75,7 @@ namespace Lost.PlantGenerator
             {
                 for (int i = 0; i < branches.Length; i++)
                 {
-                    PoolManager.DestroyImmediate(branches[i].gameObject);
+                    GameObject.DestroyImmediate(branches[i].gameObject);
                 }
             }
 
@@ -102,7 +97,11 @@ namespace Lost.PlantGenerator
         /// </summary>
         private void Awake()
         {
-            ManagersReady.Register(this);
+            if (this.isGenerated == false)
+            {
+                Debug.LogError($"PlantGenerator {this.gameObject.name} is being generated on Awake.  Much better to generate in editor.", this);
+                ManagersReady.Register(this);
+            }   
         }
 
         public void OnManagersReady()
@@ -115,15 +114,8 @@ namespace Lost.PlantGenerator
                 {
                     yield return null;
                 }
-
-                if (this.randomizeOnStart)
-                {
-                    this.GenerateNewRandomSeed();
-                }
-                else
-                {
-                    this.Generate();
-                }
+                
+                this.Generate();
             }
         }
 
@@ -217,7 +209,7 @@ namespace Lost.PlantGenerator
                         return;
                     }
 
-                    GameObject newBranch = PoolManager.InstantiatePrefab(prototypePlant);
+                    GameObject newBranch = GameObject.Instantiate(prototypePlant);
 
                     // setting up the base rotation
                     float baseRotation = 360 * ((float)j / (float)branchTypeCount);
