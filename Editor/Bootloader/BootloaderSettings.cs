@@ -19,7 +19,7 @@ namespace Lost
     public class BootloaderSettings : BuildConfigSettings
     {
         #pragma warning disable 0649
-        [SerializeField] private string bootloaderResourcePath = Bootloader.BootloaderResourcePath;
+        [SerializeField] private string bootloaderResourcePath = Bootloader.DefaultBootloaderResourcePath;
         [SerializeField] private BootloaderConfigLocation bootloaderConfigLocation;
         
         [ShowIf("bootloaderConfigLocation", BootloaderConfigLocation.RuntimeConfigSettings)]

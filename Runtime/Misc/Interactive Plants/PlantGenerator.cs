@@ -8,6 +8,7 @@
 
 namespace Lost.PlantGenerator
 {
+    using System.Collections;
     using UnityEngine;
     using UnityEngine.Serialization;
 
@@ -15,7 +16,7 @@ namespace Lost.PlantGenerator
     /// A game object that takes a bunch of parameters like materials and branch prefabs and generates
     /// a nice looking random plants.
     /// </summary>
-    public class PlantGenerator : MonoBehaviour
+    public class PlantGenerator : MonoBehaviour, IOnManagersReady
     {
         /// <summary>
         /// Stores the layer id the branches will live on.
@@ -101,13 +102,28 @@ namespace Lost.PlantGenerator
         /// </summary>
         private void Awake()
         {
-            if (this.randomizeOnStart)
+            ManagersReady.Register(this);
+        }
+
+        public void OnManagersReady()
+        {
+            CoroutineRunner.Instance.StartCoroutine(Coroutine());
+
+            IEnumerator Coroutine()
             {
-                this.GenerateNewRandomSeed();
-            }
-            else
-            {
-                this.Generate();
+                while (ManagersReady.Instance.IsProcessing)
+                {
+                    yield return null;
+                }
+
+                if (this.randomizeOnStart)
+                {
+                    this.GenerateNewRandomSeed();
+                }
+                else
+                {
+                    this.Generate();
+                }
             }
         }
 
