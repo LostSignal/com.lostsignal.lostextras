@@ -99,6 +99,7 @@ namespace Lost
         public const string DefaultBootloaderResourcePath = "Lost/Bootloader";
 
         // RuntimeConfig Settings Keys
+        public const string BootloaderDisabled = "Bootloader.Disabled";
         public const string BootloaderResourcePath = "Bootloader.ResourcePath";
         public const string BootloaderConfigLocation = "Bootloader.ConfigLocation";
         public const string BootloaderConfig = "Bootloader.Config";
@@ -209,6 +210,13 @@ namespace Lost
 
             static bool ShouldRunBootloader()
             {
+                bool bootloaderDisabled = RuntimeBuildConfig.Instance.GetBool(BootloaderDisabled);
+
+                if (bootloaderDisabled)
+                {
+                    return false;
+                }
+
                 var ignoreSceneNamesString = RuntimeBuildConfig.Instance.GetString(BootloaderIgnoreSceneNames);
                 var ignoreScenes = string.IsNullOrWhiteSpace(ignoreSceneNamesString) ? Array.Empty<string>() : ignoreSceneNamesString.Split(';');
                 var activeSceneName = SceneManager.GetActiveScene().name;
