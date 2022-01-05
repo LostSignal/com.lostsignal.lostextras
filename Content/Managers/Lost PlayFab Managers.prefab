@@ -12,6 +12,8 @@ GameObject:
   - component: {fileID: 347343687292677757}
   - component: {fileID: 3257933933375610091}
   - component: {fileID: 4780704495349598054}
+  - component: {fileID: 8651880799043167540}
+  - component: {fileID: 6415984361417165699}
   m_Layer: 0
   m_Name: Lost PlayFab Managers
   m_TagString: Untagged
@@ -29,6 +31,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 142978924606978296}
   m_Father: {fileID: 0}
@@ -88,6 +91,30 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isEnabled: 0
   printDebugOutput: 0
+--- !u!114 &8651880799043167540
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 347343687292677710}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60d62a31f0d456c48b8d012f2d2a7dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &6415984361417165699
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 347343687292677710}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb09737ebc3fce94c9a63875918fcbdb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1062841113249212798
 GameObject:
   m_ObjectHideFlags: 0
@@ -115,6 +142,7 @@ Transform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 347343687292677711}
   m_RootOrder: 0
