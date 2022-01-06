@@ -13,9 +13,7 @@ namespace Lost
 
     public class ValidatePlayFabSessionTicketSubsystem : IGameServerSubsystem
     {
-#if !UNITY
         private global::PlayFab.PlayFabAuthenticationContext titleAuthenticationContext;
-#endif
 
         public string Name => nameof(ValidatePlayFabSessionTicketSubsystem);
 
@@ -48,20 +46,9 @@ namespace Lost
                 return false;
             }
 
-#if UNITY
-            await Task.Delay(0);
-            return true;
-#else
             if (this.titleAuthenticationContext == null)
             {
-                var getTitleAuthentication = await global::PlayFab.PlayFabAuthenticationAPI.GetEntityTokenAsync(new global::PlayFab.AuthenticationModels.GetEntityTokenRequest
-                {
-                    Entity = new global::PlayFab.AuthenticationModels.EntityKey
-                    {
-                        Id = global::PlayFab.PlayFabSettings.staticSettings.TitleId,
-                        Type = "title",
-                    }
-                });
+                var getTitleAuthentication = await PlayFab.PlayFabUtil.GetTitleEntityTokenAsync();
 
                 this.titleAuthenticationContext = new global::PlayFab.PlayFabAuthenticationContext
                 {
@@ -88,7 +75,6 @@ namespace Lost
             {
                 return false;
             }
-#endif
         }
 
         public Task UpdatePlayerInfo(UserInfo userInfo)

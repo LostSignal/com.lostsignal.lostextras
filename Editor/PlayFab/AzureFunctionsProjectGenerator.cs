@@ -79,23 +79,30 @@ namespace Lost
                 return;
             }
 
-            global::PlayFab.PlayFabAuthenticationAPI.ForgetAllCredentials();
             global::PlayFab.PlayFabSettings.staticSettings.TitleId = playFabSettings.TitleId;
             global::PlayFab.PlayFabSettings.staticSettings.DeveloperSecretKey = playFabSettings.SecretKey;
-
-            var getEntityToken = await global::PlayFab.PlayFabAuthenticationAPI.GetEntityTokenAsync(new global::PlayFab.AuthenticationModels.GetEntityTokenRequest
-            {
-                Entity = new global::PlayFab.AuthenticationModels.EntityKey { Id = playFabSettings.TitleId, Type = "title", }
-            });
-
-            string entityId = getEntityToken.Result.Entity.Id;
-            string entityType = getEntityToken.Result.Entity.Type;
-            string entityToken = getEntityToken.Result.EntityToken;
+            
+            var getTitleEntityToken = await PlayFabUtil.GetTitleEntityTokenAsync();
 
             // Calculating the function site (need to append "/api/" to the end correctly)
-            string functionsSite = playFabSettings.FunctionsSite.EndsWith("/") ?
-                playFabSettings.FunctionsSite + "api/" :
-                playFabSettings.FunctionsSite + "/api/";
+            string functionsSite = playFabSettings.FunctionsSite;
+
+            if (functionsSite.EndsWith("/api/"))
+            {
+                // Do Nothing
+            }
+            else if (functionsSite.EndsWith("/api"))
+            {
+                functionsSite += "/";
+            }
+            else if (functionsSite.EndsWith("/"))
+            {
+                functionsSite += "api/";
+            }
+            else
+            {
+                functionsSite += "/api/";
+            }
 
             foreach (var function in this.GetAllCloudFunctions())
             {
@@ -105,9 +112,9 @@ namespace Lost
                     FunctionUrl = functionsSite + function.FullName + "?code=" + playFabSettings.FunctionsHostKey,
                     AuthenticationContext = new global::PlayFab.PlayFabAuthenticationContext
                     {
-                        EntityId = entityId,
-                        EntityType = entityType,
-                        EntityToken = entityToken,
+                        EntityId = getTitleEntityToken.Result.Entity.Id,
+                        EntityType = getTitleEntityToken.Result.Entity.Type,
+                        EntityToken = getTitleEntityToken.Result.EntityToken,
                     },
                 });
 

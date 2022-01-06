@@ -60,16 +60,8 @@ namespace Lost.CloudFunctions
             {
                 try
                 {
-                    var getEntityToken = await global::PlayFab.PlayFabAuthenticationAPI.GetEntityTokenAsync(new global::PlayFab.AuthenticationModels.GetEntityTokenRequest
-                    {
-                        Entity = new global::PlayFab.AuthenticationModels.EntityKey
-                        {
-                            Id = global::PlayFab.PlayFabSettings.staticSettings.TitleId,
-                            Type = "title",
-                        },
-                    });
-
-                    titleEntityTokenCache = getEntityToken.Result.EntityToken;
+                    var getTitleEntityToken = await PlayFabUtil.GetTitleEntityTokenAsync();
+                    titleEntityTokenCache = getTitleEntityToken.Result.EntityToken;
                 }
                 catch (Exception ex)
                 {
@@ -166,25 +158,18 @@ namespace Lost.CloudFunctions
             return $"http://localhost:7071/api/{functionName}";
         }
 
-        private async Task<Result> ExecuteLocalhostCloudFuntion(string functionName, object functionParameter, bool usesTitleEntityToken = false)
+        private async Task<Result> ExecuteLocalhostCloudFuntion(string functionName, object functionParameter)
         {
 #if UNITY_EDITOR
-            string titleEntityToken = null;
-
-            if (usesTitleEntityToken)
+            if (PlayFabSecretKeyCheck() == false)
             {
-                if (PlayFabSecretKeyCheck() == false)
-                {
-                    return null;
-                }
-                
-                titleEntityToken = await GetTitleEntityToken();
+                return null;
             }
-
+           
             var functionExecution = new FunctionExecutionContext(
                 JsonUtil.Serialize(functionParameter),
                 PlayFabManager.Instance.User.PlayFabId,
-                titleEntityToken);
+                await GetTitleEntityToken());
 
             try
             {
