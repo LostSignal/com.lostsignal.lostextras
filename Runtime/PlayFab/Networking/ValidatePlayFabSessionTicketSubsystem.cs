@@ -13,7 +13,9 @@ namespace Lost
 
     public class ValidatePlayFabSessionTicketSubsystem : IGameServerSubsystem
     {
+        #if !UNITY || UNITY_EDITOR
         private global::PlayFab.PlayFabAuthenticationContext titleAuthenticationContext;
+        #endif
 
         public string Name => nameof(ValidatePlayFabSessionTicketSubsystem);
 
@@ -33,6 +35,7 @@ namespace Lost
 
         public async Task<bool> AllowPlayerToJoin(UserInfo userInfo)
         {
+            #if !UNITY || UNITY_EDITOR
             if (userInfo == null)
             {
                 return false;
@@ -75,8 +78,12 @@ namespace Lost
             {
                 return false;
             }
+            
+            #else
+            return await Task.FromResult(true);
+            #endif
         }
-
+        
         public Task UpdatePlayerInfo(UserInfo userInfo)
         {
             userInfo.SetSessionTicket(null);
