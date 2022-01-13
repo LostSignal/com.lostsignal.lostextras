@@ -4,6 +4,8 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+#if !UNITY || USING_PLAYFAB
+
 using System.Threading.Tasks;
 
 namespace Lost.PlayFab
@@ -20,3 +22,5 @@ namespace Lost.PlayFab
         }
     }
 }
+
+#endif
