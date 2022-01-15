@@ -78,13 +78,14 @@ namespace Lost.PlayFab
                 PlayFabClientAPI.GetCharacterDataAsync);
         }
 
-        public UnityTask<UpdateCharacterDataResult> UpdateCharacterData(string characterId, Dictionary<string, string> data)
+        public UnityTask<UpdateCharacterDataResult> UpdateCharacterData(string characterId, Dictionary<string, string> data, UserDataPermission permission = UserDataPermission.Private)
         {
             return this.playfabManager.Do<UpdateCharacterDataRequest, UpdateCharacterDataResult>(
                 new UpdateCharacterDataRequest
                 {
                     CharacterId = characterId,
                     Data = data,
+                    Permission = permission,
                 },
                 PlayFabClientAPI.UpdateCharacterDataAsync);
         }
