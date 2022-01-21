@@ -418,6 +418,11 @@ namespace Lost.PlayFab
             }
         }
 
+        private void OnApplicationQuit()
+        {
+            PlayFabClientAPI.ForgetAllCredentials();
+        }
+
         private void OnGlobalErrorEvent(PlayFabError error)
         {
             if (error.Error == PlayFabErrorCode.InvalidSessionTicket)

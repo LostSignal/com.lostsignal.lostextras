@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------
+//-----------------------------------------------------------------------
 // <copyright file="UnityAdsProvider.cs" company="Lost Signal LLC">
 //     Copyright (c) Lost Signal LLC. All rights reserved.
 // </copyright>
@@ -28,84 +28,77 @@ namespace Lost
         [SerializeField] private string googlePlayAppStoreId = null;
 #pragma warning restore 0649, 0414
 
-        string IAdProvider.ProviderName
-        {
-            get { return "UnityAds"; }
-        }
+        private System.Action<AdWatchedResult> watchResultCallback;
+
+        string IAdProvider.ProviderName => "UnityAds";
 
 #if USING_UNITY_ADS && (UNITY_IOS || UNITY_ANDROID)
 
-        bool IAdProvider.AreAdsSupported
-        {
-            get { return UnityEngine.Advertisements.Advertisement.isSupported; }
-        }
+        bool IAdProvider.AreAdsSupported => Advertisement.isSupported;
 
-        bool IAdProvider.AreAdsInitialized
-        {
-            get { return UnityEngine.Advertisements.Advertisement.isSupported && UnityEngine.Advertisements.Advertisement.isInitialized; }
-        }
+        bool IAdProvider.AreAdsInitialized => Advertisement.isSupported && Advertisement.isInitialized;
 
-        bool IAdProvider.IsAdReady(string placementId)
-        {
-            return this.IsPlacementIdAdReady(placementId);
-        }
+        bool IAdProvider.IsAdReady(string placementId) => this.IsPlacementIdAdReady(placementId);
 
         void IAdProvider.ShowAd(string placementId, bool isRewarded, System.Action<AdWatchedResult> watchResultCallback)
         {
-            var options = new UnityEngine.Advertisements.ShowOptions()
+            if (this.watchResultCallback != null)
             {
-                resultCallback = new System.Action<UnityEngine.Advertisements.ShowResult>(result =>
-                {
-                    if (watchResultCallback != null)
-                    {
-                        switch (result)
-                        {
-                            case UnityEngine.Advertisements.ShowResult.Failed:
-                                watchResultCallback(AdWatchedResult.AdFailed);
-                                break;
-                            case UnityEngine.Advertisements.ShowResult.Skipped:
-                                watchResultCallback(AdWatchedResult.AdSkipped);
-                                break;
-                            case UnityEngine.Advertisements.ShowResult.Finished:
-                                watchResultCallback(AdWatchedResult.AdFinished);
-                                break;
-                            default:
-                                UnityEngine.Debug.LogErrorFormat("UnityAdProvider.ShowAd() encountered unknown ShowResult {0}", result);
-                                break;
-                        }
-                    }
-                }),
+                Debug.LogError("Calling ShowAd while ad already in progress!");
+                watchResultCallback?.Invoke(AdWatchedResult.AdFailed);
+                return;
+            }
+
+            this.watchResultCallback = watchResultCallback;
+
+            var options = new ShowOptions()
+            {
+                gamerSid = null,  // TODO [bgish]: Not sure what to put here...
             };
 
-            UnityEngine.Advertisements.Advertisement.Show(placementId, options);
+            Advertisement.Show(placementId, options);
         }
 
         public void OnUnityAdsReady(string placementId)
         {
-            throw new System.NotImplementedException();
+            Debug.Log($"OnUnityAdsReady({placementId})");
         }
 
         public void OnUnityAdsDidError(string message)
         {
-            throw new System.NotImplementedException();
+            Debug.LogError($"OnUnityAdsDidError({message})");
         }
 
         public void OnUnityAdsDidStart(string placementId)
         {
-            throw new System.NotImplementedException();
+            Debug.Log($"OnUnityAdsDidStart({placementId})");
         }
 
         public void OnUnityAdsDidFinish(string placementId, ShowResult showResult)
         {
-            throw new System.NotImplementedException();
+            if (this.watchResultCallback != null)
+            {
+                switch (showResult)
+                {
+                    case ShowResult.Failed:
+                        this.watchResultCallback(AdWatchedResult.AdFailed);
+                        break;
+                    case ShowResult.Skipped:
+                        this.watchResultCallback(AdWatchedResult.AdSkipped);
+                        break;
+                    case ShowResult.Finished:
+                        this.watchResultCallback(AdWatchedResult.AdFinished);
+                        break;
+                    default:
+                        Debug.LogErrorFormat("UnityAdProvider.ShowAd() encountered unknown ShowResult {0}", showResult);
+                        break;
+                }
+            }
+
+            this.watchResultCallback = null;
         }
 
-        private bool IsPlacementIdAdReady(string placementId)
-        {
-            return UnityEngine.Advertisements.Advertisement.isSupported &&
-                UnityEngine.Advertisements.Advertisement.isInitialized &&
-                UnityEngine.Advertisements.Advertisement.IsReady(placementId);
-        }
+        private bool IsPlacementIdAdReady(string placementId) => Advertisement.isSupported && Advertisement.isInitialized && Advertisement.IsReady(placementId);
 
 #if UNITY_EDITOR && !USING_UNITY_ADS
 
@@ -137,15 +130,19 @@ namespace Lost
                 Advertisement.AddListener(this);
 
 #if UNITY_IOS
+                
                 if (string.IsNullOrWhiteSpace(this.appleAppStoreId) == false && UnityEngine.Advertisements.Advertisement.isInitialized == false)
                 {
                     UnityEngine.Advertisements.Advertisement.Initialize(this.appleAppStoreId);
                 }
+
 #elif UNITY_ANDROID
+
                 if (string.IsNullOrWhiteSpace(this.googlePlayAppStoreId) == false && UnityEngine.Advertisements.Advertisement.isInitialized == false)
                 {
                     UnityEngine.Advertisements.Advertisement.Initialize(this.googlePlayAppStoreId);
                 }
+
 #endif
                 AdsManager.Instance.SetAdProvider(this);
             };
@@ -158,15 +155,9 @@ namespace Lost
 
         bool IAdProvider.AreAdsInitialized => false;
 
-        bool IAdProvider.IsAdReady(string placementId)
-        {
-            return false;
-        }
+        bool IAdProvider.IsAdReady(string placementId) => false;
 
-        void IAdProvider.ShowAd(string placementId, bool isRewarded, System.Action<AdWatchedResult> watchResultCallback)
-        {
-            watchResultCallback?.Invoke(AdWatchedResult.AdsNotSupported);
-        }
+        void IAdProvider.ShowAd(string placementId, bool isRewarded, System.Action<AdWatchedResult> watchResultCallback) => watchResultCallback?.Invoke(AdWatchedResult.AdsNotSupported);
 
 #endif
     }
