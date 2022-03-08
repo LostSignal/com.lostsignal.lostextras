@@ -9,6 +9,7 @@
 namespace Lost
 {
     using System.Collections;
+    using Lost.XR;
     using UnityEngine;
 
     public sealed class ScreenSizeManager : Manager<ScreenSizeManager>
