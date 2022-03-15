@@ -9,7 +9,6 @@
 namespace Lost
 {
     using System.Collections;
-    using Lost.XR;
     using UnityEngine;
 
     public sealed class ScreenSizeManager : Manager<ScreenSizeManager>
@@ -40,15 +39,8 @@ namespace Lost
             yield return null;
 
             bool isMobilePlatform = Application.platform == RuntimePlatform.Android || Application.platform == RuntimePlatform.IPhonePlayer;
-            bool isMobileVrDevice = false;
-
-            // Detecting if this is a mobile vr device
-            if (Application.isEditor == false && this.limitMobileScreenSize && isMobilePlatform && this.DoesXRManagerExist())
-            {
-                yield return XRManager.WaitForInitialization();
-                isMobileVrDevice = XRManager.Instance.CurrentDevice.XRType == XRType.VRHeadset;
-            }
-
+            bool isMobileVrDevice = isMobilePlatform && (SystemInfo.deviceName == "Oculus Quest" || SystemInfo.deviceName == "Oculus Quest 2");
+            
             if (isMobilePlatform && isMobileVrDevice == false)
             {
                 bool isLandscape = Screen.width > Screen.height;
@@ -72,19 +64,6 @@ namespace Lost
                     Screen.SetResolution(newWidth, newHeight, true);
                 }
             }
-        }
-
-        private bool DoesXRManagerExist()
-        {
-            for (int i = 0; i < ManagersReady.Managers.Count; i++)
-            {
-                if (ManagersReady.Managers[i] is XRManager)
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
     }
 }

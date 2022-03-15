@@ -115,6 +115,11 @@
             "name": "com.unity.animation.rigging",
             "expression": "0.0.0",
             "define": "USING_UNITY_ANIMATION_RIGGING"
+        },
+        {
+            "name": "com.lostsignal.lostxr",
+            "expression": "0.0.0",
+            "define": "USING_LOST_XR"
         }
     ],
     "noEngineReferences": false

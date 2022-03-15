@@ -6,15 +6,11 @@
 
 #if UNITY
 
-#if USING_UNITY_XR_INTERACTION_TOOLKIT && USING_UNITY_XR_MANAGEMENT
-#define USING_UNITY_XR
-#endif
-
 namespace Lost
 {
     using UnityEngine;
 
-#if USING_UNITY_XR
+#if USING_LOST_XR
     using UnityEngine.XR.Interaction.Toolkit;
     using UnityEngine.XR.Interaction.Toolkit.UI;
 #endif
@@ -46,7 +42,7 @@ namespace Lost
 #pragma warning disable 0649
         [SerializeField] private XRDialogSettings settings;
 
-#if USING_UNITY_XR
+#if USING_LOST_XR
         [SerializeField] private bool isGrabable;
 #endif
 
@@ -59,7 +55,7 @@ namespace Lost
         private bool isPancakeMode;
         private bool hasBeenGrabbed;
 
-#if USING_UNITY_XR
+#if USING_LOST_XR
         private TrackedDeviceGraphicRaycaster trackedDeviceGraphicRaycaster;
         private XRGrabInteractable xrGrabInteractable;
 #endif
@@ -140,7 +136,7 @@ namespace Lost
             {
                 this.enabled = true;
 
-#if USING_UNITY_XR
+#if USING_LOST_XR
                 if (this.trackedDeviceGraphicRaycaster == null)
                 {
                     this.trackedDeviceGraphicRaycaster = this.GetOrAddComponent<TrackedDeviceGraphicRaycaster>();
