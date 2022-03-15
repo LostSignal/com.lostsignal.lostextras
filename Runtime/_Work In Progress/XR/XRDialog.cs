@@ -130,7 +130,11 @@ namespace Lost
         {
             //// TODO [bgish]: Do some calculations to spawn this dialog in front of the user
 
+#if USING_LOST_XR
             this.isPancakeMode = XRManager.IsInitialized == false || XRManager.Instance.IsFlatMode;
+#else
+            this.isPancakeMode = true;
+#endif
 
             if (this.isPancakeMode == false)
             {
