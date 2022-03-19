@@ -17,8 +17,6 @@ namespace Lost
     {
         private static readonly string OldEditorAppConfigBuildSettingsId = "com.lostsignal.appconfig";
         private static readonly string EditorBuildConfigsBuildSettingsId = "com.lostsignal.buildconfigs";
-
-        private static readonly string LostLibraryAssetsPath = "Assets/Editor/com.lostsignal.lostlibrary";
         private static readonly string BuildConfigsAssetName = "BuildConfigs.asset";
 
         static LostCore()
@@ -68,22 +66,9 @@ namespace Lost
             }
         }
 
-        public static T CreateScriptableObject<T>(string guid, string assetName)
-            where T : UnityEngine.Object
-        {
-            string assetPath = GetAssetPath(assetName);
-
-            if (System.IO.File.Exists(assetPath) == false)
-            {
-                AssetDatabase.CopyAsset(UnityEditor.AssetDatabase.GUIDToAssetPath(guid), assetPath);
-            }
-
-            return AssetDatabase.LoadAssetAtPath<T>(assetPath);
-        }
-
         private static EditorBuildConfigs CreateEditorBuildConfigs()
         {
-            string editorBuildConfigAssetPath = GetAssetPath(BuildConfigsAssetName);
+            string editorBuildConfigAssetPath = LostLibrary.GetAssetPath(BuildConfigsAssetName);
 
             EditorBuildConfigs editorBuildConfigs;
 
@@ -147,20 +132,6 @@ namespace Lost
             AssetDatabase.CreateAsset(asset, path);
             EditorUtility.SetDirty(asset);
             AssetDatabase.SaveAssets();
-        }
-
-        private static string GetAssetPath(string assetName)
-        {
-            // Making sure EditorAppConfig path exists
-            string assetPath = Path.Combine(LostLibraryAssetsPath, assetName);
-            string assetDirectory = Path.GetDirectoryName(assetPath);
-
-            if (Directory.Exists(assetDirectory) == false)
-            {
-                Directory.CreateDirectory(assetDirectory);
-            }
-
-            return assetPath;
         }
 
         //// TODO [bgish]: Need to make a button somewhere in Bootloader Settings for creating these assets.  Should also
