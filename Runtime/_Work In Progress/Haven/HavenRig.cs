@@ -69,7 +69,7 @@ namespace Lost.Haven
 
         private void Awake()
         {
-            XRManager.OnInitialized += this.Initialize;
+            // XRManager.OnInitialized += this.Initialize;
 
             //// TODO [bgish]: Make sure all the Teleport Interactors have thier interaction layer set to HavenRig.TeleportLayer
         }
