@@ -121,6 +121,11 @@
             "name": "com.lostsignal.lostxr",
             "expression": "0.0.0",
             "define": "USING_LOST_XR"
+        },
+        {
+            "name": "com.lostsignal.lostugui",
+            "expression": "0.0.0",
+            "define": "USING_LOST_UGUI"
         }
     ],
     "noEngineReferences": false
