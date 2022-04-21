@@ -9,18 +9,19 @@
 namespace Lost.PlayFab
 {
     using System.Collections;
+    using System.Collections.Generic;
 
-    #if USING_PLAYFAB
+#if USING_PLAYFAB
     using global::PlayFab.ClientModels;
-    #endif
+#endif
 
     using TMPro;
     using UnityEngine;
     using UnityEngine.UI;
 
-    public class LogInDialog : DialogLogic
+    public class LogInDialog : DialogLogic, IValidate
     {
-        #pragma warning disable 0649
+#pragma warning disable 0649
         [SerializeField] private LostButton closeButton;
         [SerializeField] private TMP_InputField emailInputField;
         [SerializeField] private TMP_InputField passwordInputField;
@@ -29,9 +30,9 @@ namespace Lost.PlayFab
         [SerializeField] private LostButton forgotPasswordButton;
         [SerializeField] private LostButton createNewAccountButton;
         [SerializeField] private string forgotEmailTemplateId;
-        #pragma warning restore 0649
+#pragma warning restore 0649
 
-        #if USING_PLAYFAB
+#if USING_PLAYFAB
 
         private GetPlayerCombinedInfoRequestParams infoRequestParams;
         private LoginManager loginManager;
@@ -50,7 +51,6 @@ namespace Lost.PlayFab
         protected override void Awake()
         {
             base.Awake();
-            this.OnValidate();
 
             this.closeButton.onClick.AddListener(this.OnBackButtonPressed);
             this.emailInputField.onValueChanged.AddListener(this.UpdateLogInButton);
@@ -103,15 +103,15 @@ namespace Lost.PlayFab
             }
         }
 
-        private void OnValidate()
+        public void Validate(List<ValidationError> errors)
         {
-            this.AssertNotNull(this.closeButton, nameof(this.closeButton));
-            this.AssertNotNull(this.emailInputField, nameof(this.emailInputField));
-            this.AssertNotNull(this.passwordInputField, nameof(this.passwordInputField));
-            this.AssertNotNull(this.autoLoginToggle, nameof(this.autoLoginToggle));
-            this.AssertNotNull(this.logInButton, nameof(this.logInButton));
-            this.AssertNotNull(this.forgotPasswordButton, nameof(this.forgotPasswordButton));
-            this.AssertNotNull(this.createNewAccountButton, nameof(this.createNewAccountButton));
+            this.AssertNotNull(errors, this.closeButton, nameof(this.closeButton));
+            this.AssertNotNull(errors, this.emailInputField, nameof(this.emailInputField));
+            this.AssertNotNull(errors, this.passwordInputField, nameof(this.passwordInputField));
+            this.AssertNotNull(errors, this.autoLoginToggle, nameof(this.autoLoginToggle));
+            this.AssertNotNull(errors, this.logInButton, nameof(this.logInButton));
+            this.AssertNotNull(errors, this.forgotPasswordButton, nameof(this.forgotPasswordButton));
+            this.AssertNotNull(errors, this.createNewAccountButton, nameof(this.createNewAccountButton));
         }
 
         private void OnPlayFabManagerInitialized()
@@ -217,7 +217,7 @@ namespace Lost.PlayFab
             }
         }
 
-        #endif
+#endif
     }
 }
 
